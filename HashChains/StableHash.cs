@@ -11,6 +11,11 @@
 
         public static uint Prehash(string value, uint length)
         {
+            if (String.IsNullOrEmpty(value))
+            {
+                throw new ArgumentException($"'{nameof(value)}' cannot be null or empty.", nameof(value));
+            }
+
             unchecked
             {
                 var hash = 5381u;
