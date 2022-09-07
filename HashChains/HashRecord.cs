@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 
 namespace HashChains
 {
-    internal class HashStream
-        : IHashStream
+    internal class HashStream<TValue>
+        : IHashStream<TValue>
     {
         private readonly Stream stream;
         private readonly uint bucketCount;
@@ -30,22 +30,22 @@ namespace HashChains
             this.recordSize = Marshal.SizeOf(typeof(HashRecord));
         }
 
-        public string this[uint key]
+        public TValue this[string key]
         {
             get => throw new NotImplementedException();
             set => throw new NotImplementedException();
         }
 
-        public ICollection<uint> Keys => throw new NotImplementedException();
-        public ICollection<string> Values => throw new NotImplementedException();
+        public ICollection<string> Keys => throw new NotImplementedException();
+        public ICollection<TValue> Values => throw new NotImplementedException();
         public int Count => throw new NotImplementedException();
         public bool IsReadOnly { get; }
 
-        public void Add(uint key, string value)
+        public void Add(string key, TValue value)
         {
             // 1. get prehash of value
             // 2. get bucket 
-            var (_, bucket) = StableHash.GetHashBucket(value, 3, this.bucketCount);
+            var (_, bucket) = StableHash.GetHashBucket(key, 3, this.bucketCount);
 
             // 3. calc stream offset - it's bucket * sizeof(HashRecord)
             _ = bucket * this.recordSize;
@@ -59,7 +59,7 @@ namespace HashChains
             //var x = new BinaryFormatter()
         }
 
-        public void Add(KeyValuePair<uint, string> item)
+        public void Add(KeyValuePair<string, TValue> item)
         {
             throw new NotImplementedException();
         }
@@ -69,37 +69,37 @@ namespace HashChains
             throw new NotImplementedException();
         }
 
-        public bool Contains(KeyValuePair<uint, string> item)
+        public bool Contains(KeyValuePair<string, TValue> item)
         {
             throw new NotImplementedException();
         }
 
-        public bool ContainsKey(uint key)
+        public bool ContainsKey(string key)
         {
             throw new NotImplementedException();
         }
 
-        public void CopyTo(KeyValuePair<uint, string>[] array, int arrayIndex)
+        public void CopyTo(KeyValuePair<string, TValue>[] array, int arrayIndex)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerator<KeyValuePair<uint, string>> GetEnumerator()
+        public IEnumerator<KeyValuePair<string, TValue>> GetEnumerator()
         {
             throw new NotImplementedException();
         }
 
-        public bool Remove(uint key)
+        public bool Remove(string key)
         {
             throw new NotImplementedException();
         }
 
-        public bool Remove(KeyValuePair<uint, string> item)
+        public bool Remove(KeyValuePair<string, TValue> item)
         {
             throw new NotImplementedException();
         }
 
-        public bool TryGetValue(uint key, [MaybeNullWhen(false)] out string value)
+        public bool TryGetValue(string key, [MaybeNullWhen(false)] out TValue value)
         {
             throw new NotImplementedException();
         }
@@ -111,8 +111,8 @@ namespace HashChains
     }
 
 
-    public interface IHashStream
-        : IDictionary<uint, string>
+    public interface IHashStream<TValue>
+        : IDictionary<string, TValue>
     {
     }
 
