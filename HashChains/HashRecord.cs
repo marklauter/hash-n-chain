@@ -2,9 +2,8 @@
 
 namespace HashChains
 {
-
     [DebuggerDisplay("{Offset}, {Value}")]
-    public readonly struct HashRecord
+    internal readonly struct HashRecord
     {
         internal HashRecord(
             long offset,
