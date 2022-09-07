@@ -3,10 +3,11 @@
     // http://www.partow.net/programming/hashfunctions/index.html#GeneralHashFunctionLicense
     public static class StableHash
     {
-        public static uint GetHashBucket(string value, uint length, uint buckets)
+        public static (uint hash, uint bucket) GetHashBucket(string value, uint length, uint bucketCount)
         {
             var hash = Prehash(value, length);
-            return hash % buckets;
+            var bucket = hash % bucketCount;
+            return (hash, bucket);
         }
 
         public static uint Prehash(string value, uint length)
