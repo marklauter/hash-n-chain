@@ -28,5 +28,24 @@
                 return hash;
             }
         }
+
+        public static uint Prehash(byte[] value, uint length)
+        {
+            if (value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            unchecked
+            {
+                var hash = 5381u;
+                for (var i = 0; i < length && i < value.Length; ++i)
+                {
+                    hash = (hash << 5) + hash + value[i];
+                }
+
+                return hash;
+            }
+        }
     }
 }
