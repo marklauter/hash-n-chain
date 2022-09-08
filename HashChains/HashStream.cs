@@ -13,6 +13,7 @@ namespace HashChains
         private const long CountOffset = 0;
         private const long BucketCountOffset = sizeof(int);
         private const long FirstBucketOffset = sizeof(int) * 2;
+        private const int PrehashLength = 3;
 
         private readonly Stream stream;
         private readonly BinaryWriter writer;
@@ -66,29 +67,17 @@ namespace HashChains
             set => throw new NotImplementedException();
         }
 
-        public ICollection<string> Keys => throw new NotImplementedException();
+        public ICollection<string> Keys => this.ReadKeys().ToList();
         public ICollection<TValue> Values => throw new NotImplementedException();
         public int Count { get; private set; }
         public bool IsReadOnly { get; }
 
         public void Add(string key, TValue value)
         {
-            var (hash, bucket) = StableHash.GetHashBucket(key, 3, this.bucketCount);
-            (var recordOffset, var lastRecord) = this.GetLastRecordInChain(bucket);
+            var (hash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.bucketCount);
+            (var recordOffset, var lastRecord) = this.GetLastRecordInBucket(bucket);
 
             var nextOffset = recordOffset;
-            var keyOffset = nextOffset + this.recordSize;
-            var dataOffset = keyOffset + key.Length;
-            var data = JsonConvert.SerializeObject(value);
-
-            var newRecord = new HashRecord(
-                HashRecord.NullOffset,
-                hash,
-                keyOffset,
-                key.Length,
-                dataOffset,
-                data.Length);
-
             if (lastRecord != HashRecord.Empty)
             {
                 nextOffset = this.stream.Length;
@@ -101,6 +90,18 @@ namespace HashChains
                     lastRecord.DataLength);
                 this.WriteRecord(lastRecord, recordOffset);
             }
+
+            var keyOffset = nextOffset + this.recordSize;
+            var dataOffset = keyOffset + key.Length;
+            var data = JsonConvert.SerializeObject(value);
+
+            var newRecord = new HashRecord(
+                HashRecord.NullOffset,
+                hash,
+                keyOffset,
+                key.Length,
+                dataOffset,
+                data.Length);
 
             this.WriteRecord(newRecord, nextOffset);
             this.WriteString(key, keyOffset);
@@ -207,6 +208,11 @@ namespace HashChains
 
         private TValue ReadValue(string key)
         {
+            if (String.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
             var record = this.FindRecord(key);
             this.stream.Position = record.DataOffset;
             var buffer = this.reader.ReadBytes(record.DataLength);
@@ -217,28 +223,51 @@ namespace HashChains
 
         private HashRecord FindRecord(string key)
         {
-            var (_, bucket) = StableHash.GetHashBucket(key, 3, this.bucketCount);
+            var (keyhash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.bucketCount);
             var offset = this.CalculateBucketOffset(bucket);
-
-            var record = this.ReadRecord(offset);
-            var recordKey = this.ReadKey(record);
-            while (!key.Equals(recordKey, StringComparison.Ordinal))
+            do
             {
-                if (record.NextRecordOffset != HashRecord.NullOffset)
+                var recordhash = this.ReadHashField(offset);
+                if (keyhash == recordhash)
                 {
-                    throw new KeyNotFoundException(key);
+                    // then look closer and possibly return
+                    var keyMetaData = this.ReadKeyMetaData(offset);
+                    var recordKey = this.ReadString(keyMetaData.offset, keyMetaData.length);
+                    if (key.Equals(recordKey, StringComparison.Ordinal))
+                    {
+                        return this.ReadRecord(offset);
+                    }
                 }
+                // else move to next
+                offset = this.ReadNextRecordOffsetField(offset);
 
-                record = this.ReadRecord(record.NextRecordOffset);
-                recordKey = this.ReadKey(record);
-            }
+            } while (offset != HashRecord.NullOffset);
 
-            return record;
+            throw new KeyNotFoundException(key);
         }
 
         private string ReadKey(HashRecord record)
         {
             return this.ReadString(record.KeyOffset, record.KeyLength);
+        }
+
+        private IEnumerable<string> ReadKeys()
+        {
+            for (var bucket = 0; bucket < this.bucketCount; ++bucket)
+            {
+                var offset = this.CalculateBucketOffset((uint)bucket);
+                while (offset != HashRecord.NullOffset)
+                {
+                    var keyMetaData = this.ReadKeyMetaData(offset);
+                    var key = this.ReadString(keyMetaData.offset, keyMetaData.length);
+                    if (keyMetaData.offset != HashRecord.NullOffset && keyMetaData.length > 0)
+                    {
+                        yield return key;
+                    }
+
+                    offset = this.ReadNextRecordOffsetField(offset);
+                }
+            }
         }
 
         private string ReadString(long offset, int length)
@@ -298,7 +327,7 @@ namespace HashChains
             return Unsafe.As<byte, HashRecord>(ref buffer[0]);
         }
 
-        private (long offset, HashRecord record) GetLastRecordInChain(uint bucket)
+        private (long offset, HashRecord record) GetLastRecordInBucket(uint bucket)
         {
             var offset = this.CalculateBucketOffset(bucket);
             var nextRecordOffset = this.ReadNextRecordOffsetField(offset);

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace HashChains
 {
-    [DebuggerDisplay("NO:{NextOffset}, H:{Hash}, KO:{KeyOffset}, KL:{KeyLength}, DO:{DataOffset}, DL:{DataLength}")]
+    [DebuggerDisplay("NO:{NextRecordOffset}, H:{Hash}, KO:{KeyOffset}, KL:{KeyLength}, DO:{DataOffset}, DL:{DataLength}")]
     [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Unicode, Size = 48, Pack = 1)]
     internal readonly struct HashRecord : IEquatable<HashRecord>
     {
