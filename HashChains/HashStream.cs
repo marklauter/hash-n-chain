@@ -259,10 +259,9 @@ namespace HashChains
                 while (offset != HashRecord.NullOffset)
                 {
                     var keyMetaData = this.ReadKeyMetaData(offset);
-                    var key = this.ReadString(keyMetaData.offset, keyMetaData.length);
                     if (keyMetaData.offset != HashRecord.NullOffset && keyMetaData.length > 0)
                     {
-                        yield return key;
+                        yield return this.ReadString(keyMetaData.offset, keyMetaData.length);
                     }
 
                     offset = this.ReadNextRecordOffsetField(offset);
