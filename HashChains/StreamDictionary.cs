@@ -98,17 +98,36 @@ namespace Dictionaries.IO
             set => throw new NotImplementedException();
         }
 
+        // todo: consider not supporting keys & values because the list could be /big/
+        // todo: if not supported then suggest using ReadKeys and ReadValues with a continuation token 
         public ICollection<string> Keys => this.ReadKeys().ToList();
         public ICollection<TValue> Values => throw new NotImplementedException();
+
         public int Count { get; private set; }
         public bool IsReadOnly { get; }
 
         public void Add(string key, TValue value)
         {
-            var (hash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.bucketCount);
-            (var recordOffset, var lastRecord) = this.GetLastRecordInBucket(bucket);
+            if (String.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException(nameof(key), $"'{nameof(key)}' cannot be null or empty.");
+            }
 
+            if (this.IsReadOnly)
+            {
+                throw new NotSupportedException("dictionary is readonly");
+            }
+
+            // todo: only run check if we know this bucket isn't empty
+            if (this.FindKey(key) == DictionaryRecord.NullOffset)
+            {
+                throw new ArgumentException($"An item with the same key has already been added. {nameof(key)}: {key}", nameof(key));
+            }
+
+            var (hash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.bucketCount);
+            var (recordOffset, lastRecord) = this.GetLastRecordInBucket(bucket);
             var nextOffset = recordOffset;
+
             if (lastRecord != DictionaryRecord.Empty)
             {
                 nextOffset = this.stream.Length;
@@ -160,7 +179,9 @@ namespace Dictionaries.IO
 
         public bool ContainsKey(string key)
         {
-            throw new NotImplementedException();
+            return String.IsNullOrEmpty(key)
+                ? throw new ArgumentNullException(nameof(key), $"'{nameof(key)}' cannot be null or empty.")
+                : this.FindKey(key) != DictionaryRecord.NullOffset;
         }
 
         public void CopyTo(KeyValuePair<string, TValue>[] array, int arrayIndex)
@@ -180,7 +201,7 @@ namespace Dictionaries.IO
 
         public bool Remove(KeyValuePair<string, TValue> item)
         {
-            throw new NotImplementedException();
+            return this.Remove(item.Key);
         }
 
         public bool TryGetValue(string key, [MaybeNullWhen(false)] out TValue value)
@@ -255,6 +276,15 @@ namespace Dictionaries.IO
 
         private DictionaryRecord FindRecord(string key)
         {
+            var offset = this.FindKey(key);
+            return offset == DictionaryRecord.NullOffset
+                ? throw new KeyNotFoundException(key)
+                : this.ReadRecord(offset);
+        }
+
+        // returns offset of record matching key or DictionaryRecord.NullOffset if not found
+        private long FindKey(string key)
+        {
             var (keyhash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.bucketCount);
             var offset = this.CalculateBucketOffset(bucket);
             do
@@ -262,20 +292,19 @@ namespace Dictionaries.IO
                 var recordhash = this.ReadHashField(offset);
                 if (keyhash == recordhash)
                 {
-                    // then look closer and possibly return
                     var keyMetaData = this.ReadKeyMetaData(offset);
                     var recordKey = this.ReadString(keyMetaData.offset, keyMetaData.length);
                     if (key.Equals(recordKey, StringComparison.Ordinal))
                     {
-                        return this.ReadRecord(offset);
+                        return offset;
                     }
                 }
-                // else move to next
+
                 offset = this.ReadNextRecordOffsetField(offset);
 
             } while (offset != DictionaryRecord.NullOffset);
 
-            throw new KeyNotFoundException(key);
+            return DictionaryRecord.NullOffset;
         }
 
         private string ReadKey(DictionaryRecord record)

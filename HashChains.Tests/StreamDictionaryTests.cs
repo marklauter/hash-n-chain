@@ -11,7 +11,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
 
             Assert.Equal(bucketCount * Marshal.SizeOf<DictionaryRecord>() + sizeof(int) * 2, stream.Length);
         }
@@ -23,16 +23,34 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
 
             var key = "key";
             var value = "value";
 
-            hashStream.Add(key, value);
+            dictionary.Add(key, value);
 
 #pragma warning disable xUnit2013 // Do not use equality check to check for collection size.
-            Assert.Equal(1, hashStream.Count);
+            Assert.Equal(1, dictionary.Count);
 #pragma warning restore xUnit2013 // Do not use equality check to check for collection size.
+        }
+
+        [Fact]
+        public void StreamDictionary_Add_Throws_On_DuplicateKey()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10u;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+
+            var key = "key";
+            var value = "value";
+
+            dictionary.Add(key, value);
+            var exception = Assert.Throws<ArgumentException>(() => dictionary.Add(key, value));
+            Assert.Contains(key, exception.Message);
+            Assert.Contains(nameof(key), exception.Message);
         }
 
         [Fact]
@@ -42,7 +60,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -53,17 +71,17 @@ namespace Dictionaries.IO.Tests
             var key3 = "key3";
             var value3 = "value3";
 
-            hashStream.Add(key1, value1);
-            hashStream.Add(key2, value2);
-            hashStream.Add(key3, value3);
+            dictionary.Add(key1, value1);
+            dictionary.Add(key2, value2);
+            dictionary.Add(key3, value3);
 
-            var returnedValue = hashStream[key1];
+            var returnedValue = dictionary[key1];
             Assert.Equal(value1, returnedValue);
 
-            returnedValue = hashStream[key2];
+            returnedValue = dictionary[key2];
             Assert.Equal(value2, returnedValue);
 
-            returnedValue = hashStream[key3];
+            returnedValue = dictionary[key3];
             Assert.Equal(value3, returnedValue);
         }
 
@@ -74,7 +92,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -87,11 +105,11 @@ namespace Dictionaries.IO.Tests
 
             var key4 = "not found";
 
-            hashStream.Add(key1, value1);
-            hashStream.Add(key2, value2);
-            hashStream.Add(key3, value3);
+            dictionary.Add(key1, value1);
+            dictionary.Add(key2, value2);
+            dictionary.Add(key3, value3);
 
-            var exception = Assert.Throws<KeyNotFoundException>(() => { var value = hashStream[key4]; });
+            var exception = Assert.Throws<KeyNotFoundException>(() => { var value = dictionary[key4]; });
             Assert.Contains(key4, exception.Message);
         }
 
@@ -102,7 +120,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -113,16 +131,16 @@ namespace Dictionaries.IO.Tests
             var key3 = "key3";
             var value3 = "value3";
 
-            hashStream.Add(key1, value1);
-            hashStream.Add(key2, value2);
-            hashStream.Add(key3, value3);
+            dictionary.Add(key1, value1);
+            dictionary.Add(key2, value2);
+            dictionary.Add(key3, value3);
 
-            var exception = Assert.Throws<ArgumentNullException>(() => { var value = hashStream[String.Empty]; });
+            var exception = Assert.Throws<ArgumentNullException>(() => { var value = dictionary[String.Empty]; });
             Assert.Contains("key", exception.Message);
 
             string? nullkey = null;
 #pragma warning disable CS8604 // Possible null reference argument.
-            exception = Assert.Throws<ArgumentNullException>(() => { var value = hashStream[nullkey]; });
+            exception = Assert.Throws<ArgumentNullException>(() => { var value = dictionary[nullkey]; });
 #pragma warning restore CS8604 // Possible null reference argument.
             Assert.Contains("key", exception.Message);
         }
@@ -134,7 +152,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -145,15 +163,74 @@ namespace Dictionaries.IO.Tests
             var key3 = "key3";
             var value3 = "value3";
 
-            hashStream.Add(key1, value1);
-            hashStream.Add(key2, value2);
-            hashStream.Add(key3, value3);
+            dictionary.Add(key1, value1);
+            dictionary.Add(key2, value2);
+            dictionary.Add(key3, value3);
 
-            var keys = hashStream.Keys;
+            var keys = dictionary.Keys;
             Assert.Equal(3, keys.Count);
             Assert.Contains(key1, keys);
             Assert.Contains(key2, keys);
             Assert.Contains(key3, keys);
+        }
+
+        [Fact]
+        public void StreamDictionary_ContainsKey()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10u;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+
+            var key1 = "key1";
+            var value1 = "value1";
+
+            var key2 = "key2";
+            var value2 = "value2";
+
+            var key3 = "key3";
+            var value3 = "value3";
+
+            dictionary.Add(key1, value1);
+            dictionary.Add(key2, value2);
+            dictionary.Add(key3, value3);
+
+            Assert.True(dictionary.ContainsKey(key1));
+            Assert.True(dictionary.ContainsKey(key2));
+            Assert.True(dictionary.ContainsKey(key3));
+        }
+
+        [Fact]
+        public void StreamDictionary_ContainsKey_Throws_ArgumentNullException()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10u;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+
+            var key1 = "key1";
+            var value1 = "value1";
+
+            var key2 = "key2";
+            var value2 = "value2";
+
+            var key3 = "key3";
+            var value3 = "value3";
+
+            dictionary.Add(key1, value1);
+            dictionary.Add(key2, value2);
+            dictionary.Add(key3, value3);
+
+            var exception = Assert.Throws<ArgumentNullException>(() => { var value = dictionary.ContainsKey(String.Empty); });
+            Assert.Contains("key", exception.Message);
+
+            string? nullkey = null;
+#pragma warning disable CS8604 // Possible null reference argument.
+            exception = Assert.Throws<ArgumentNullException>(() => { var value = dictionary.ContainsKey(nullkey); });
+#pragma warning restore CS8604 // Possible null reference argument.
+            Assert.Contains("key", exception.Message);
         }
     }
 }
