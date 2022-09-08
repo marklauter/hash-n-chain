@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Dictionaries.IO
@@ -22,7 +23,7 @@ namespace Dictionaries.IO
         private readonly int recordSize;
         private bool disposedValue;
 
-        public unsafe StreamDictionary(Stream stream)
+        public StreamDictionary(Stream stream)
         {
             this.stream = stream ?? throw new ArgumentNullException(nameof(stream));
             if (!stream.CanSeek)
@@ -39,7 +40,7 @@ namespace Dictionaries.IO
 
             this.writer = new BinaryWriter(stream, Encoding.UTF8, true);
             this.reader = new BinaryReader(stream, Encoding.UTF8, true);
-            this.recordSize = sizeof(DictionaryRecord);
+            this.recordSize = Marshal.SizeOf<DictionaryRecord>();
 
             this.Count = this.ReadCount();
             this.bucketCount = this.ReadBucketCount();
@@ -57,7 +58,7 @@ namespace Dictionaries.IO
         {
         }
 
-        public unsafe StreamDictionary(
+        public StreamDictionary(
             Stream stream,
             uint bucketCount,
             bool isReadOnly)
@@ -87,7 +88,7 @@ namespace Dictionaries.IO
             this.IsReadOnly = isReadOnly;
             this.writer = new BinaryWriter(stream, Encoding.UTF8, true);
             this.reader = new BinaryReader(stream, Encoding.UTF8, true);
-            this.recordSize = sizeof(DictionaryRecord);
+            this.recordSize = Marshal.SizeOf<DictionaryRecord>();
             this.InitializeStream();
         }
 

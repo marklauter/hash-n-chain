@@ -6,7 +6,6 @@
 		<Nullable>enable</Nullable>
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 		<AnalysisLevel>latest-all</AnalysisLevel>
-		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

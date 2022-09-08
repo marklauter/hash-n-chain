@@ -1,9 +1,11 @@
-﻿namespace Dictionaries.IO.Tests
+﻿using System.Runtime.InteropServices;
+
+namespace Dictionaries.IO.Tests
 {
     public class StreamDictionaryTests
     {
         [Fact]
-        public unsafe void StreamDictionary_Stream_Gets_Initialized()
+        public void StreamDictionary_Stream_Gets_Initialized()
         {
 #pragma warning disable IDISP001 // Dispose created - hash stream disposes
             var stream = new MemoryStream();
@@ -11,7 +13,7 @@
             var bucketCount = 10u;
             using var hashStream = new StreamDictionary<string>(stream, bucketCount);
 
-            Assert.Equal(bucketCount * sizeof(DictionaryRecord) + sizeof(int) * 2, stream.Length);
+            Assert.Equal(bucketCount * Marshal.SizeOf<DictionaryRecord>() + sizeof(int) * 2, stream.Length);
         }
 
         [Fact]
