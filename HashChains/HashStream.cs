@@ -223,12 +223,12 @@ namespace HashChains
             var recordKey = this.ReadKey(record);
             while (!key.Equals(recordKey, StringComparison.Ordinal))
             {
-                if (record.NextOffset != HashRecord.NullOffset)
+                if (record.NextRecordOffset != HashRecord.NullOffset)
                 {
                     throw new KeyNotFoundException(key);
                 }
 
-                record = this.ReadRecord(record.NextOffset);
+                record = this.ReadRecord(record.NextRecordOffset);
                 recordKey = this.ReadKey(record);
             }
 
@@ -296,11 +296,11 @@ namespace HashChains
         {
             var offset = this.CalculateBucketOffset(bucket);
             var record = this.ReadRecord(offset);
-            while (record.NextOffset != HashRecord.NullOffset)
+            while (record.NextRecordOffset != HashRecord.NullOffset)
             {
-                offset = record.NextOffset;
+                offset = record.NextRecordOffset;
                 // todo: performance can be improved by reading only the offset values
-                record = this.ReadRecord(record.NextOffset);
+                record = this.ReadRecord(record.NextRecordOffset);
             }
 
             return (offset, record);
