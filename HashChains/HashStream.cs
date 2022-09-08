@@ -110,113 +110,6 @@ namespace HashChains
             this.WriteCount();
         }
 
-        private void WriteString(string s, long offset)
-        {
-            this.stream.Position = offset;
-            this.stream.Write(Encoding.UTF8.GetBytes(s));
-        }
-
-        private TValue ReadValue(string key)
-        {
-            var record = this.FindRecord(key);
-            this.stream.Position = record.DataOffset;
-            var buffer = this.reader.ReadBytes(record.DataLength);
-            var json = Encoding.UTF8.GetString(buffer);
-            var value = JsonConvert.DeserializeObject<TValue>(json);
-            return value == null ? throw new InvalidDataException(json) : value;
-        }
-
-        private HashRecord FindRecord(string key)
-        {
-            var (_, bucket) = StableHash.GetHashBucket(key, 3, this.bucketCount);
-            var offset = this.CalculateBucketOffset(bucket);
-            var record = this.ReadRecord(offset);
-            var recordKey = this.ReadKey(record);
-            while (!key.Equals(recordKey, StringComparison.Ordinal))
-            {
-                if (record.NextOffset != HashRecord.NullOffset)
-                {
-                    throw new KeyNotFoundException(key);
-                }
-
-                record = this.ReadRecord(record.NextOffset);
-                recordKey = this.ReadKey(record);
-            }
-
-            return record;
-        }
-
-        private string ReadKey(HashRecord record)
-        {
-            this.stream.Position = record.KeyOffset;
-            var buffer = this.reader.ReadBytes(record.KeyLength);
-            return Encoding.UTF8.GetString(buffer);
-        }
-
-        private void WriteCount()
-        {
-            this.stream.Position = CountOffset;
-            this.writer.Write(this.Count);
-        }
-
-        private void WriteBucketCount()
-        {
-            this.stream.Position = BucketCountOffset;
-            this.writer.Write(this.bucketCount);
-        }
-
-        private void WriteHeader()
-        {
-            this.WriteCount();
-            this.WriteBucketCount();
-        }
-
-        private void InitializeStream()
-        {
-            this.WriteHeader();
-            this.AllocateBuckets();
-        }
-
-        private void AllocateBuckets()
-        {
-            this.stream.Position = FirstBucketOffset;
-            this.stream.Write(new byte[this.bucketCount * this.recordSize]);
-        }
-
-        private long CalculateBucketOffset(uint bucket)
-        {
-            return bucket * this.recordSize + FirstBucketOffset;
-        }
-
-        private void WriteRecord(HashRecord record, long offset)
-        {
-            var buffer = new byte[this.recordSize];
-            Unsafe.As<byte, HashRecord>(ref buffer[0]) = record;
-            this.stream.Position = offset;
-            this.stream.Write(buffer);
-        }
-
-        private HashRecord ReadRecord(long offset)
-        {
-            this.stream.Position = offset;
-            var buffer = this.reader.ReadBytes(this.recordSize);
-            return Unsafe.As<byte, HashRecord>(ref buffer[0]);
-        }
-
-        private (long offset, HashRecord record) GetLastRecordInChain(uint bucket)
-        {
-            var offset = this.CalculateBucketOffset(bucket);
-            var record = this.ReadRecord(offset);
-            while (record.NextOffset != HashRecord.NullOffset)
-            {
-                offset = record.NextOffset;
-                // todo: performance can be improved by reading only the offset values
-                record = this.ReadRecord(record.NextOffset);
-            }
-
-            return (offset, record);
-        }
-
         public void Add(KeyValuePair<string, TValue> item)
         {
             this.Add(item.Key, item.Value);
@@ -304,6 +197,113 @@ namespace HashChains
         {
             this.Dispose(disposing: true);
             GC.SuppressFinalize(this);
+        }
+
+        private void WriteString(string s, long offset)
+        {
+            this.stream.Position = offset;
+            this.writer.Write(Encoding.UTF8.GetBytes(s));
+        }
+
+        private TValue ReadValue(string key)
+        {
+            var record = this.FindRecord(key);
+            this.stream.Position = record.DataOffset;
+            var buffer = this.reader.ReadBytes(record.DataLength);
+            var json = Encoding.UTF8.GetString(buffer);
+            var value = JsonConvert.DeserializeObject<TValue>(json);
+            return value == null ? throw new InvalidDataException(json) : value;
+        }
+
+        private HashRecord FindRecord(string key)
+        {
+            var (_, bucket) = StableHash.GetHashBucket(key, 3, this.bucketCount);
+            var offset = this.CalculateBucketOffset(bucket);
+            var record = this.ReadRecord(offset);
+            var recordKey = this.ReadKey(record);
+            while (!key.Equals(recordKey, StringComparison.Ordinal))
+            {
+                if (record.NextOffset != HashRecord.NullOffset)
+                {
+                    throw new KeyNotFoundException(key);
+                }
+
+                record = this.ReadRecord(record.NextOffset);
+                recordKey = this.ReadKey(record);
+            }
+
+            return record;
+        }
+
+        private string ReadKey(HashRecord record)
+        {
+            this.stream.Position = record.KeyOffset;
+            var buffer = this.reader.ReadBytes(record.KeyLength);
+            return Encoding.UTF8.GetString(buffer);
+        }
+
+        private void WriteCount()
+        {
+            this.stream.Position = CountOffset;
+            this.writer.Write(this.Count);
+        }
+
+        private void WriteBucketCount()
+        {
+            this.stream.Position = BucketCountOffset;
+            this.writer.Write(this.bucketCount);
+        }
+
+        private void WriteHeader()
+        {
+            this.WriteCount();
+            this.WriteBucketCount();
+        }
+
+        private void InitializeStream()
+        {
+            this.WriteHeader();
+            this.AllocateBuckets();
+        }
+
+        private void AllocateBuckets()
+        {
+            this.stream.Position = FirstBucketOffset;
+            this.writer.Write(new byte[this.bucketCount * this.recordSize]);
+        }
+
+        private long CalculateBucketOffset(uint bucket)
+        {
+            return bucket * this.recordSize + FirstBucketOffset;
+        }
+
+        private void WriteRecord(HashRecord record, long offset)
+        {
+            var buffer = new byte[this.recordSize];
+            Unsafe.As<byte, HashRecord>(ref buffer[0]) = record;
+            this.stream.Position = offset;
+            this.writer.Write(buffer);
+        }
+
+        private HashRecord ReadRecord(long offset)
+        {
+            this.stream.Position = offset;
+            var buffer = this.reader.ReadBytes(this.recordSize);
+            return Unsafe.As<byte, HashRecord>(ref buffer[0]);
+        }
+
+        private (long offset, HashRecord record) GetLastRecordInChain(uint bucket)
+        {
+            var offset = this.CalculateBucketOffset(bucket);
+            var record = this.ReadRecord(offset);
+            while (record.NextOffset != HashRecord.NullOffset)
+            {
+                offset = record.NextOffset;
+                // todo: performance can be improved by reading only the offset values
+                record = this.ReadRecord(record.NextOffset);
+            }
+
+            return (offset, record);
         }
     }
 }
