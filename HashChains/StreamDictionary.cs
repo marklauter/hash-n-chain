@@ -120,8 +120,8 @@ namespace Dictionaries.IO
 
             var (hash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.bucketCount);
             var bucketOffset = this.CalculateBucketOffset(bucket);
-            var firstRecord = this.ReadRecord(bucketOffset);
-            if (firstRecord != DictionaryRecord.Empty
+
+            if (this.ReadRecord(bucketOffset) != DictionaryRecord.Empty
                 && this.FindKey(key) != DictionaryRecord.NullOffset)
             {
                 throw new ArgumentException($"An item with the same key has already been added. {nameof(key)}: {key}", nameof(key));
