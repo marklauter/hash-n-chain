@@ -45,9 +45,9 @@ namespace HashChains
                 throw new ArgumentException("can't read", nameof(stream));
             }
 
-            if (!stream.CanWrite)
+            if (isReadOnly && !stream.CanWrite)
             {
-                throw new ArgumentException("can't write", nameof(stream));
+                throw new ArgumentException("can't write to stream", nameof(isReadOnly));
             }
 
             this.bucketCount = bucketCount;
@@ -91,7 +91,8 @@ namespace HashChains
                 this.WriteRecord(lastRecord, recordOffset);
             }
 
-            var keyOffset = nextOffset + this.recordSize;
+            var keyOffset = Math.Max(nextOffset, this.stream.Length)
+                + this.recordSize;
             var dataOffset = keyOffset + key.Length;
             var data = JsonConvert.SerializeObject(value);
 
