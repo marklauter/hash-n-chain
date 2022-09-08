@@ -1,27 +1,27 @@
-﻿namespace HashChains.Tests
+﻿namespace Dictionaries.IO.Tests
 {
-    public class HashStreamTests
+    public class StreamDictionaryTests
     {
         [Fact]
-        public unsafe void HashStream_Stream_Gets_Initialized()
+        public unsafe void StreamDictionary_Stream_Gets_Initialized()
         {
 #pragma warning disable IDISP001 // Dispose created - hash stream disposes
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new HashStream<string>(stream, bucketCount);
+            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
 
-            Assert.Equal(bucketCount * sizeof(HashRecord) + sizeof(int) * 2, stream.Length);
+            Assert.Equal(bucketCount * sizeof(DictionaryRecord) + sizeof(int) * 2, stream.Length);
         }
 
         [Fact]
-        public void HashStream_Add()
+        public void StreamDictionary_Add()
         {
 #pragma warning disable IDISP001 // Dispose created - hash stream disposes
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new HashStream<string>(stream, bucketCount);
+            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
 
             var key = "key";
             var value = "value";
@@ -34,13 +34,13 @@
         }
 
         [Fact]
-        public void HashStream_Index()
+        public void StreamDictionary_Index()
         {
 #pragma warning disable IDISP001 // Dispose created - hash stream disposes
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new HashStream<string>(stream, bucketCount);
+            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -66,13 +66,13 @@
         }
 
         [Fact]
-        public void HashStream_Index_Throws_KeyNotFound()
+        public void StreamDictionary_Index_Throws_KeyNotFound()
         {
 #pragma warning disable IDISP001 // Dispose created - hash stream disposes
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new HashStream<string>(stream, bucketCount);
+            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -94,13 +94,13 @@
         }
 
         [Fact]
-        public void HashStream_Index_Throws_ArgumentNullException()
+        public void StreamDictionary_Index_Throws_ArgumentNullException()
         {
 #pragma warning disable IDISP001 // Dispose created - hash stream disposes
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new HashStream<string>(stream, bucketCount);
+            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -126,13 +126,13 @@
         }
 
         [Fact]
-        public void HashStream_Keys()
+        public void StreamDictionary_Keys()
         {
 #pragma warning disable IDISP001 // Dispose created - hash stream disposes
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var hashStream = new HashStream<string>(stream, bucketCount);
+            using var hashStream = new StreamDictionary<string>(stream, bucketCount);
 
             var key1 = "key1";
             var value1 = "value1";

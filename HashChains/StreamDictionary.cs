@@ -4,10 +4,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace HashChains
+namespace Dictionaries.IO
 {
-    internal class HashStream<TValue>
-        : IHashStream<TValue>
+    internal class StreamDictionary<TValue>
+        : IStreamDictionary<TValue>
         , IDisposable
     {
         private const long CountOffset = 0;
@@ -22,14 +22,42 @@ namespace HashChains
         private readonly int recordSize;
         private bool disposedValue;
 
-        public HashStream(
+        public unsafe StreamDictionary(Stream stream)
+        {
+            this.stream = stream ?? throw new ArgumentNullException(nameof(stream));
+            if (!stream.CanSeek)
+            {
+                throw new ArgumentException("can't seek", nameof(stream));
+            }
+
+            if (!stream.CanRead)
+            {
+                throw new ArgumentException("can't read", nameof(stream));
+            }
+
+            this.IsReadOnly = !stream.CanWrite;
+
+            this.writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            this.reader = new BinaryReader(stream, Encoding.UTF8, true);
+            this.recordSize = sizeof(DictionaryRecord);
+
+            this.Count = this.ReadCount();
+            this.bucketCount = this.ReadBucketCount();
+            var minFileSize = this.CalculateBucketOffset(this.bucketCount);
+            if (stream.Length < minFileSize)
+            {
+                throw new ArgumentException($"invalid stream size. expected: {minFileSize}, actual: {stream.Length}", nameof(stream));
+            }
+        }
+
+        public StreamDictionary(
             Stream stream,
             uint bucketCount)
             : this(stream, bucketCount, false)
         {
         }
 
-        public unsafe HashStream(
+        public unsafe StreamDictionary(
             Stream stream,
             uint bucketCount,
             bool isReadOnly)
@@ -50,15 +78,17 @@ namespace HashChains
                 throw new ArgumentException("can't write to stream", nameof(isReadOnly));
             }
 
+            if (stream.Length != 0)
+            {
+                throw new ArgumentException("expected stream to be zero length", nameof(stream));
+            }
+
             this.bucketCount = bucketCount;
             this.IsReadOnly = isReadOnly;
             this.writer = new BinaryWriter(stream, Encoding.UTF8, true);
             this.reader = new BinaryReader(stream, Encoding.UTF8, true);
-            this.recordSize = sizeof(HashRecord);
-            if (stream.Length == 0)
-            {
-                this.InitializeStream();
-            }
+            this.recordSize = sizeof(DictionaryRecord);
+            this.InitializeStream();
         }
 
         public TValue this[string key]
@@ -78,10 +108,10 @@ namespace HashChains
             (var recordOffset, var lastRecord) = this.GetLastRecordInBucket(bucket);
 
             var nextOffset = recordOffset;
-            if (lastRecord != HashRecord.Empty)
+            if (lastRecord != DictionaryRecord.Empty)
             {
                 nextOffset = this.stream.Length;
-                lastRecord = new HashRecord(
+                lastRecord = new DictionaryRecord(
                     nextOffset,
                     lastRecord.Hash,
                     lastRecord.KeyOffset,
@@ -96,8 +126,8 @@ namespace HashChains
             var dataOffset = keyOffset + key.Length;
             var data = JsonConvert.SerializeObject(value);
 
-            var newRecord = new HashRecord(
-                HashRecord.NullOffset,
+            var newRecord = new DictionaryRecord(
+                DictionaryRecord.NullOffset,
                 hash,
                 keyOffset,
                 key.Length,
@@ -189,7 +219,7 @@ namespace HashChains
             }
         }
 
-        ~HashStream()
+        ~StreamDictionary()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
             this.Dispose(disposing: false);
@@ -222,7 +252,7 @@ namespace HashChains
             return value == null ? throw new InvalidDataException(json) : value;
         }
 
-        private HashRecord FindRecord(string key)
+        private DictionaryRecord FindRecord(string key)
         {
             var (keyhash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.bucketCount);
             var offset = this.CalculateBucketOffset(bucket);
@@ -242,12 +272,12 @@ namespace HashChains
                 // else move to next
                 offset = this.ReadNextRecordOffsetField(offset);
 
-            } while (offset != HashRecord.NullOffset);
+            } while (offset != DictionaryRecord.NullOffset);
 
             throw new KeyNotFoundException(key);
         }
 
-        private string ReadKey(HashRecord record)
+        private string ReadKey(DictionaryRecord record)
         {
             return this.ReadString(record.KeyOffset, record.KeyLength);
         }
@@ -257,10 +287,10 @@ namespace HashChains
             for (var bucket = 0; bucket < this.bucketCount; ++bucket)
             {
                 var offset = this.CalculateBucketOffset((uint)bucket);
-                while (offset != HashRecord.NullOffset)
+                while (offset != DictionaryRecord.NullOffset)
                 {
                     var keyMetaData = this.ReadKeyMetaData(offset);
-                    if (keyMetaData.offset != HashRecord.NullOffset && keyMetaData.length > 0)
+                    if (keyMetaData.offset != DictionaryRecord.NullOffset && keyMetaData.length > 0)
                     {
                         yield return this.ReadString(keyMetaData.offset, keyMetaData.length);
                     }
@@ -275,6 +305,18 @@ namespace HashChains
             this.stream.Position = offset;
             var buffer = this.reader.ReadBytes(length);
             return Encoding.UTF8.GetString(buffer);
+        }
+
+        private int ReadCount()
+        {
+            this.stream.Position = CountOffset;
+            return this.reader.ReadInt32();
+        }
+
+        private uint ReadBucketCount()
+        {
+            this.stream.Position = BucketCountOffset;
+            return this.reader.ReadUInt32();
         }
 
         private void WriteCount()
@@ -312,27 +354,27 @@ namespace HashChains
             return bucket * this.recordSize + FirstBucketOffset;
         }
 
-        private void WriteRecord(HashRecord record, long offset)
+        private void WriteRecord(DictionaryRecord record, long offset)
         {
             var buffer = new byte[this.recordSize];
-            Unsafe.As<byte, HashRecord>(ref buffer[0]) = record;
+            Unsafe.As<byte, DictionaryRecord>(ref buffer[0]) = record;
             this.stream.Position = offset;
             this.writer.Write(buffer);
         }
 
-        private HashRecord ReadRecord(long offset)
+        private DictionaryRecord ReadRecord(long offset)
         {
             this.stream.Position = offset;
             var buffer = this.reader.ReadBytes(this.recordSize);
-            return Unsafe.As<byte, HashRecord>(ref buffer[0]);
+            return Unsafe.As<byte, DictionaryRecord>(ref buffer[0]);
         }
 
-        private (long offset, HashRecord record) GetLastRecordInBucket(uint bucket)
+        private (long offset, DictionaryRecord record) GetLastRecordInBucket(uint bucket)
         {
             var offset = this.CalculateBucketOffset(bucket);
             var nextRecordOffset = this.ReadNextRecordOffsetField(offset);
 
-            while (nextRecordOffset != HashRecord.NullOffset)
+            while (nextRecordOffset != DictionaryRecord.NullOffset)
             {
                 offset = nextRecordOffset;
                 nextRecordOffset = this.ReadNextRecordOffsetField(offset);
@@ -354,37 +396,37 @@ namespace HashChains
 
         private long ReadNextRecordOffsetField(long offset)
         {
-            this.stream.Position = offset + HashRecord.NextRecordOffsetFieldOffset;
+            this.stream.Position = offset + DictionaryRecord.NextRecordOffsetFieldOffset;
             return this.reader.ReadInt64();
         }
 
         private uint ReadHashField(long offset)
         {
-            this.stream.Position = offset + HashRecord.HashFieldOffset;
+            this.stream.Position = offset + DictionaryRecord.HashFieldOffset;
             return this.reader.ReadUInt32();
         }
 
         private long ReadKeyOffsetField(long offset)
         {
-            this.stream.Position = offset + HashRecord.KeyOffsetFieldOffset;
+            this.stream.Position = offset + DictionaryRecord.KeyOffsetFieldOffset;
             return this.reader.ReadInt64();
         }
 
         private int ReadKeyLengthField(long offset)
         {
-            this.stream.Position = offset + HashRecord.KeyLengthFieldOffset;
+            this.stream.Position = offset + DictionaryRecord.KeyLengthFieldOffset;
             return this.reader.ReadInt32();
         }
 
         private long ReadDataOffsetField(long offset)
         {
-            this.stream.Position = offset + HashRecord.DataOffsetFieldOffset;
+            this.stream.Position = offset + DictionaryRecord.DataOffsetFieldOffset;
             return this.reader.ReadInt64();
         }
 
         private int ReadDataLengthField(long offset)
         {
-            this.stream.Position = offset + HashRecord.DataLengthFieldOffset;
+            this.stream.Position = offset + DictionaryRecord.DataLengthFieldOffset;
             return this.reader.ReadInt32();
         }
     }

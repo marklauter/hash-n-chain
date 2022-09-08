@@ -1,4 +1,4 @@
-namespace HashChains.Tests
+namespace Dictionaries.IO.Tests
 {
     public class StableHashTests
     {

@@ -1,11 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace HashChains
+namespace Dictionaries.IO
 {
     [DebuggerDisplay("NO:{NextRecordOffset}, H:{Hash}, KO:{KeyOffset}, KL:{KeyLength}, DO:{DataOffset}, DL:{DataLength}")]
     [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Unicode, Size = 48, Pack = 1)]
-    internal readonly struct HashRecord : IEquatable<HashRecord>
+    internal readonly struct DictionaryRecord : IEquatable<DictionaryRecord>
     {
         internal const long NullOffset = 0L;
         internal const int NextRecordOffsetFieldOffset = 0x00;
@@ -15,15 +15,15 @@ namespace HashChains
         internal const int DataOffsetFieldOffset = 0x18;
         internal const int DataLengthFieldOffset = 0x20;
 
-        internal static HashRecord Empty => new(
-            HashRecord.NullOffset,
+        internal static DictionaryRecord Empty => new(
+            DictionaryRecord.NullOffset,
             0,
-            HashRecord.NullOffset,
+            DictionaryRecord.NullOffset,
             0,
-            HashRecord.NullOffset,
+            DictionaryRecord.NullOffset,
             0);
 
-        internal HashRecord(
+        internal DictionaryRecord(
             long nextRecordOffset,
             uint hash,
             long keyOffset,
@@ -59,10 +59,10 @@ namespace HashChains
 
         public override bool Equals(object? obj)
         {
-            return obj is HashRecord record && this.Equals(record);
+            return obj is DictionaryRecord record && this.Equals(record);
         }
 
-        public bool Equals(HashRecord other)
+        public bool Equals(DictionaryRecord other)
         {
             return this.NextRecordOffset == other.NextRecordOffset &&
                    this.Hash == other.Hash &&
@@ -70,12 +70,12 @@ namespace HashChains
                    this.DataLength == other.DataLength;
         }
 
-        public static bool operator ==(HashRecord left, HashRecord right)
+        public static bool operator ==(DictionaryRecord left, DictionaryRecord right)
         {
             return left.Equals(right);
         }
 
-        public static bool operator !=(HashRecord left, HashRecord right)
+        public static bool operator !=(DictionaryRecord left, DictionaryRecord right)
         {
             return !(left == right);
         }

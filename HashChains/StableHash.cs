@@ -1,4 +1,4 @@
-﻿namespace HashChains
+﻿namespace Dictionaries.IO
 {
     // http://www.partow.net/programming/hashfunctions/index.html#GeneralHashFunctionLicense
     public static class StableHash
