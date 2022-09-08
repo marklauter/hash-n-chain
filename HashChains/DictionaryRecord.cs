@@ -15,7 +15,7 @@ namespace Dictionaries.IO
         internal const int DataOffsetFieldOffset = 0x18;
         internal const int DataLengthFieldOffset = 0x20;
 
-        internal static DictionaryRecord Empty => new(
+        internal static DictionaryRecord Empty { get; } = new(
             DictionaryRecord.NullOffset,
             0,
             DictionaryRecord.NullOffset,

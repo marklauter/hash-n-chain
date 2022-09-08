@@ -118,13 +118,15 @@ namespace Dictionaries.IO
                 throw new NotSupportedException("dictionary is readonly");
             }
 
-            // todo: only run check if we know this bucket isn't empty
-            if (this.FindKey(key) == DictionaryRecord.NullOffset)
+            var (hash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.bucketCount);
+            var bucketOffset = this.CalculateBucketOffset(bucket);
+            var firstRecord = this.ReadRecord(bucketOffset);
+            if (firstRecord != DictionaryRecord.Empty
+                && this.FindKey(key) != DictionaryRecord.NullOffset)
             {
                 throw new ArgumentException($"An item with the same key has already been added. {nameof(key)}: {key}", nameof(key));
             }
 
-            var (hash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.bucketCount);
             var (recordOffset, lastRecord) = this.GetLastRecordInBucket(bucket);
             var nextOffset = recordOffset;
 
