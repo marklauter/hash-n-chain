@@ -8,6 +8,13 @@ namespace HashChains
     internal readonly struct HashRecord : IEquatable<HashRecord>
     {
         internal const long NullOffset = 0L;
+        internal const int NextRecordOffsetFieldOffset = 0x00;
+        internal const int HashFieldOffset = 0x08;
+        internal const int KeyOffsetFieldOffset = 0x0C;
+        internal const int KeyLengthFieldOffset = 0x14;
+        internal const int DataOffsetFieldOffset = 0x18;
+        internal const int DataLengthFieldOffset = 0x20;
+
         internal static HashRecord Empty => new(
             HashRecord.NullOffset,
             0,

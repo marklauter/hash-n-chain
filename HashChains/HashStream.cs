@@ -219,6 +219,7 @@ namespace HashChains
         {
             var (_, bucket) = StableHash.GetHashBucket(key, 3, this.bucketCount);
             var offset = this.CalculateBucketOffset(bucket);
+
             var record = this.ReadRecord(offset);
             var recordKey = this.ReadKey(record);
             while (!key.Equals(recordKey, StringComparison.Ordinal))
@@ -237,8 +238,13 @@ namespace HashChains
 
         private string ReadKey(HashRecord record)
         {
-            this.stream.Position = record.KeyOffset;
-            var buffer = this.reader.ReadBytes(record.KeyLength);
+            return this.ReadString(record.KeyOffset, record.KeyLength);
+        }
+
+        private string ReadString(long offset, int length)
+        {
+            this.stream.Position = offset;
+            var buffer = this.reader.ReadBytes(length);
             return Encoding.UTF8.GetString(buffer);
         }
 
@@ -295,15 +301,62 @@ namespace HashChains
         private (long offset, HashRecord record) GetLastRecordInChain(uint bucket)
         {
             var offset = this.CalculateBucketOffset(bucket);
-            var record = this.ReadRecord(offset);
-            while (record.NextRecordOffset != HashRecord.NullOffset)
+            var nextRecordOffset = this.ReadNextRecordOffsetField(offset);
+
+            while (nextRecordOffset != HashRecord.NullOffset)
             {
-                offset = record.NextRecordOffset;
-                // todo: performance can be improved by reading only the offset values
-                record = this.ReadRecord(record.NextRecordOffset);
+                offset = nextRecordOffset;
+                nextRecordOffset = this.ReadNextRecordOffsetField(offset);
             }
 
+            var record = this.ReadRecord(offset);
             return (offset, record);
+        }
+
+        private (long offset, int length) ReadKeyMetaData(long offset)
+        {
+            return (this.ReadKeyOffsetField(offset), this.ReadKeyLengthField(offset));
+        }
+
+        private (long offset, int length) ReadDataMetaData(long offset)
+        {
+            return (this.ReadDataOffsetField(offset), this.ReadDataLengthField(offset));
+        }
+
+        private long ReadNextRecordOffsetField(long offset)
+        {
+            this.stream.Position = offset + HashRecord.NextRecordOffsetFieldOffset;
+            return this.reader.ReadInt64();
+        }
+
+        private uint ReadHashField(long offset)
+        {
+            this.stream.Position = offset + HashRecord.HashFieldOffset;
+            return this.reader.ReadUInt32();
+        }
+
+        private long ReadKeyOffsetField(long offset)
+        {
+            this.stream.Position = offset + HashRecord.KeyOffsetFieldOffset;
+            return this.reader.ReadInt64();
+        }
+
+        private int ReadKeyLengthField(long offset)
+        {
+            this.stream.Position = offset + HashRecord.KeyLengthFieldOffset;
+            return this.reader.ReadInt32();
+        }
+
+        private long ReadDataOffsetField(long offset)
+        {
+            this.stream.Position = offset + HashRecord.DataOffsetFieldOffset;
+            return this.reader.ReadInt64();
+        }
+
+        private int ReadDataLengthField(long offset)
+        {
+            this.stream.Position = offset + HashRecord.DataLengthFieldOffset;
+            return this.reader.ReadInt32();
         }
     }
 }
