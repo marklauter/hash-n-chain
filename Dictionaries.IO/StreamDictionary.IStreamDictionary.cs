@@ -93,7 +93,18 @@ namespace Dictionaries.IO
 
         public bool Contains(KeyValuePair<string, TValue> item)
         {
-            throw new NotImplementedException();
+            var offset = this.FindKey(item.Key);
+            if (offset == DictionaryRecord.NullOffset)
+            {
+                return false;
+            }
+            else
+            {
+                var (dataOffset, dataLength) = this.ReadDataMetaData(offset);
+                var valueJson = JsonConvert.SerializeObject(item.Value);
+                var storedjson = this.ReadString(dataOffset, dataLength);
+                return storedjson.Equals(valueJson, StringComparison.Ordinal);
+            }
         }
 
         public bool ContainsKey(string key)

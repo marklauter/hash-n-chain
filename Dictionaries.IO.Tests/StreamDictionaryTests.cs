@@ -272,5 +272,37 @@ namespace Dictionaries.IO.Tests
             returnedValue = dictionary[key4];
             Assert.Equal(value4, returnedValue);
         }
+
+        [Fact]
+        public void StreamDictionary_Contains()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10u;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+
+            var key1 = "key1";
+            var value1 = "value1";
+            var kvp1 = new KeyValuePair<string, string>(key1, value1);
+
+            var key2 = "key2";
+            var value2 = "value2";
+            var kvp2 = new KeyValuePair<string, string>(key2, value2);
+
+            var key3 = "key3";
+            var value3 = "value3";
+            var kvp3 = new KeyValuePair<string, string>(key3, value3);
+
+            dictionary.Add(key1, value1);
+            dictionary.Add(key2, value2);
+            dictionary.Add(key3, value3);
+
+#pragma warning disable xUnit2017 // Do not use Contains() to check if a value exists in a collection
+            Assert.True(dictionary.Contains(kvp1));
+            Assert.True(dictionary.Contains(kvp2));
+            Assert.True(dictionary.Contains(kvp3));
+#pragma warning restore xUnit2017 // Do not use Contains() to check if a value exists in a collection
+        }
     }
 }
