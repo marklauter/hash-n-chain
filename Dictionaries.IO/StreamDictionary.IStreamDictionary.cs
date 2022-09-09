@@ -87,7 +87,8 @@ namespace Dictionaries.IO
 
         public void Clear()
         {
-            throw new NotImplementedException();
+            // zero writes the bucket heads
+            this.InitializeStream();
         }
 
         public bool Contains(KeyValuePair<string, TValue> item)

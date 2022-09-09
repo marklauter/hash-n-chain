@@ -109,7 +109,7 @@ namespace Dictionaries.IO.Tests
             dictionary.Add(key2, value2);
             dictionary.Add(key3, value3);
 
-            var exception = Assert.Throws<KeyNotFoundException>(() => { var value = dictionary[key4]; });
+            var exception = Assert.Throws<KeyNotFoundException>(() => _ = dictionary[key4]);
             Assert.Contains(key4, exception.Message);
         }
 
@@ -231,6 +231,46 @@ namespace Dictionaries.IO.Tests
             exception = Assert.Throws<ArgumentNullException>(() => { var value = dictionary.ContainsKey(nullkey); });
 #pragma warning restore CS8604 // Possible null reference argument.
             Assert.Contains("key", exception.Message);
+        }
+
+        [Fact]
+        public void StreamDictionary_Clear()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10u;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+
+            var key1 = "key1";
+            var value1 = "value1";
+            var key2 = "key2";
+            var value2 = "value2";
+            var key3 = "key3";
+            var value3 = "value3";
+            var key4 = "key4";
+            var value4 = "value4";
+
+            dictionary.Add(key1, value1);
+
+            dictionary.Clear();
+            Assert.True(dictionary.Count == 0);
+
+            dictionary.Add(key2, value2);
+            dictionary.Add(key3, value3);
+            dictionary.Add(key4, value4);
+
+            var exception = Assert.Throws<KeyNotFoundException>(() => _ = dictionary[key1]);
+            Assert.Contains(key1, exception.Message);
+
+            var returnedValue = dictionary[key2];
+            Assert.Equal(value2, returnedValue);
+
+            returnedValue = dictionary[key3];
+            Assert.Equal(value3, returnedValue);
+
+            returnedValue = dictionary[key4];
+            Assert.Equal(value4, returnedValue);
         }
     }
 }

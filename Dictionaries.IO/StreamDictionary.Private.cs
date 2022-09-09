@@ -122,6 +122,7 @@ namespace Dictionaries.IO
 
         private void InitializeStream()
         {
+            this.Count = 0;
             this.WriteHeader();
             this.AllocateBuckets();
         }
