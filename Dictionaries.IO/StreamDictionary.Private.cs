@@ -125,6 +125,7 @@ namespace Dictionaries.IO
             this.Count = 0;
             this.WriteHeader();
             this.AllocateBuckets();
+            this.stream.SetLength(this.bucketCount * this.recordSize + FirstBucketOffset);
         }
 
         private void AllocateBuckets()
