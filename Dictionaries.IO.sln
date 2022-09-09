@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32825.248
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dictionaries.IO", "HashChains\Dictionaries.IO.csproj", "{A9C68239-6182-4CCA-A3CE-79D9CA4F57CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dictionaries.IO", "Dictionaries.IO\Dictionaries.IO.csproj", "{A9C68239-6182-4CCA-A3CE-79D9CA4F57CE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dictionaries.IO.Tests", "HashChains.Tests\Dictionaries.IO.Tests.csproj", "{07B46EB0-1475-4200-B2F9-8C267F2570B8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dictionaries.IO.Tests", "Dictionaries.IO.Tests\Dictionaries.IO.Tests.csproj", "{07B46EB0-1475-4200-B2F9-8C267F2570B8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C598A1C7-7BF2-41B5-B4E2-BA87DE0C582A}"
 	ProjectSection(SolutionItems) = preProject

@@ -27,7 +27,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\HashChains\Dictionaries.IO.csproj" />
+	  <ProjectReference Include="..\Dictionaries.IO\Dictionaries.IO.csproj" />
 	</ItemGroup>
 
 </Project>
