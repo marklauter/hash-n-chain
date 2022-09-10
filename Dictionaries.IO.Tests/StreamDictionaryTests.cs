@@ -304,5 +304,34 @@ namespace Dictionaries.IO.Tests
             Assert.True(dictionary.Contains(kvp3));
 #pragma warning restore xUnit2017 // Do not use Contains() to check if a value exists in a collection
         }
+
+        [Fact]
+        public void StreamDictionary_Values()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10u;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+
+            var key1 = "key1";
+            var value1 = "value1";
+
+            var key2 = "key2";
+            var value2 = "value2";
+
+            var key3 = "key3";
+            var value3 = "value3";
+
+            dictionary.Add(key1, value1);
+            dictionary.Add(key2, value2);
+            dictionary.Add(key3, value3);
+
+            var values = dictionary.Values;
+            Assert.Equal(3, values.Count);
+            Assert.Contains(value1, values);
+            Assert.Contains(value2, values);
+            Assert.Contains(value3, values);
+        }
     }
 }

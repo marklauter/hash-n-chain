@@ -16,8 +16,8 @@ namespace Dictionaries.IO
 
         // todo: consider not supporting keys & values because the list could be /big/
         // todo: if not supported then suggest using ReadKeys and ReadValues with a continuation token 
-        public ICollection<string> Keys => this.ReadKeys().ToList();
-        public ICollection<TValue> Values => throw new NotImplementedException();
+        public ICollection<string> Keys => this.ReadKeys().ToArray();
+        public ICollection<TValue> Values => this.ReadValues().ToArray();
 
         public int Count { get; private set; }
         public bool IsReadOnly { get; }

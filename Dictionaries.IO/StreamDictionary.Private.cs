@@ -12,6 +12,26 @@ namespace Dictionaries.IO
             this.writer.Write(Encoding.UTF8.GetBytes(s));
         }
 
+        private IEnumerable<TValue> ReadValues()
+        {
+            for (var bucket = 0; bucket < this.bucketCount; ++bucket)
+            {
+                var offset = this.CalculateBucketOffset((uint)bucket);
+                do
+                {
+                    var metaData = this.ReadDataMetaData(offset);
+                    if (metaData.offset != DictionaryRecord.NullOffset && metaData.length > 0)
+                    {
+                        var json = this.ReadString(metaData.offset, metaData.length);
+                        var value = JsonConvert.DeserializeObject<TValue>(json);
+                        yield return value == null ? throw new InvalidDataException(json) : value;
+                    }
+
+                    offset = this.ReadNextRecordOffsetField(offset);
+                } while (offset != DictionaryRecord.NullOffset);
+            }
+        }
+
         private TValue ReadValue(string key)
         {
             if (String.IsNullOrEmpty(key))
@@ -70,16 +90,16 @@ namespace Dictionaries.IO
             for (var bucket = 0; bucket < this.bucketCount; ++bucket)
             {
                 var offset = this.CalculateBucketOffset((uint)bucket);
-                while (offset != DictionaryRecord.NullOffset)
+                do
                 {
-                    var keyMetaData = this.ReadKeyMetaData(offset);
-                    if (keyMetaData.offset != DictionaryRecord.NullOffset && keyMetaData.length > 0)
+                    var metaData = this.ReadKeyMetaData(offset);
+                    if (metaData.offset != DictionaryRecord.NullOffset && metaData.length > 0)
                     {
-                        yield return this.ReadString(keyMetaData.offset, keyMetaData.length);
+                        yield return this.ReadString(metaData.offset, metaData.length);
                     }
 
                     offset = this.ReadNextRecordOffsetField(offset);
-                }
+                } while (offset != DictionaryRecord.NullOffset);
             }
         }
 
