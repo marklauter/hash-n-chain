@@ -483,6 +483,7 @@ namespace Dictionaries.IO.Tests
             }
 
             Assert.False(dictionary.Remove("no key"));
+            Assert.Equal(3, dictionary.Count);
         }
 
         [Fact]
@@ -506,6 +507,7 @@ namespace Dictionaries.IO.Tests
             Assert.False(dictionary.ContainsKey("key0"));
             Assert.True(dictionary.ContainsKey("key1"));
             Assert.True(dictionary.ContainsKey("key2"));
+            Assert.Equal(2, dictionary.Count);
         }
 
         [Fact]
@@ -529,6 +531,7 @@ namespace Dictionaries.IO.Tests
             Assert.True(dictionary.ContainsKey("key0"));
             Assert.False(dictionary.ContainsKey("key1"));
             Assert.True(dictionary.ContainsKey("key2"));
+            Assert.Equal(2, dictionary.Count);
         }
 
         [Fact]
@@ -552,6 +555,7 @@ namespace Dictionaries.IO.Tests
             Assert.True(dictionary.ContainsKey("key0"));
             Assert.True(dictionary.ContainsKey("key1"));
             Assert.False(dictionary.ContainsKey("key2"));
+            Assert.Equal(2, dictionary.Count);
         }
 
         [Fact]
