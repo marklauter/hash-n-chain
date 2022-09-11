@@ -86,6 +86,35 @@ namespace Dictionaries.IO.Tests
         }
 
         [Fact]
+        public void StreamDictionary_TryGetValue()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10u;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i}";
+
+                dictionary.Add(key, value);
+            }
+
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                if (dictionary.TryGetValue(key, out var v))
+                {
+                    Assert.Equal($"value{i}", v);
+                }
+            }
+
+            Assert.False(dictionary.TryGetValue("no-key", out var x));
+        }
+
+        [Fact]
         public void StreamDictionary_Index_Throws_KeyNotFound()
         {
 #pragma warning disable IDISP001 // Dispose created - hash stream disposes

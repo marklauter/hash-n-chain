@@ -154,7 +154,20 @@ namespace Dictionaries.IO
 
         public bool TryGetValue(string key, [MaybeNullWhen(false)] out TValue value)
         {
-            throw new NotImplementedException();
+            try
+            {
+                value = this.ReadValue(key);
+                return true;
+            }
+            catch (KeyNotFoundException)
+            {
+                value = default;
+                return false;
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public IEnumerator<KeyValuePair<string, TValue>> GetEnumerator()
