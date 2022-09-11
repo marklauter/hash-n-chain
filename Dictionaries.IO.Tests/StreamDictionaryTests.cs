@@ -314,24 +314,74 @@ namespace Dictionaries.IO.Tests
             var bucketCount = 10u;
             using var dictionary = new StreamDictionary<string>(stream, bucketCount);
 
-            var key1 = "key1";
-            var value1 = "value1";
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i}";
 
-            var key2 = "key2";
-            var value2 = "value2";
-
-            var key3 = "key3";
-            var value3 = "value3";
-
-            dictionary.Add(key1, value1);
-            dictionary.Add(key2, value2);
-            dictionary.Add(key3, value3);
+                dictionary.Add(key, value);
+            }
 
             var values = dictionary.Values;
             Assert.Equal(3, values.Count);
-            Assert.Contains(value1, values);
-            Assert.Contains(value2, values);
-            Assert.Contains(value3, values);
+            for (var i = 0; i < 3; i++)
+            {
+                Assert.Contains($"value{i}", values);
+            }
+        }
+
+        [Fact]
+        public void StreamDictionary_Stream_With_Data_Sets_Count_N_Buckets()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10u;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i}";
+
+                dictionary.Add(key, value);
+            }
+
+            using var stream2 = new MemoryStream();
+            stream.Position = 0;
+            stream.CopyTo(stream2);
+
+            using var dictionary2 = new StreamDictionary<string>(stream2);
+            Assert.Equal(dictionary.Count, dictionary2.Count);
+            Assert.Equal(dictionary.BucketCount, dictionary2.BucketCount);
+        }
+
+        [Fact]
+        public void StreamDictionary_Stream_CopyTo()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10u;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i}";
+
+                dictionary.Add(key, value);
+            }
+
+            var array = new KeyValuePair<string, string>[dictionary.Count];
+            dictionary.CopyTo(array, 0);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var kvp = array[i];
+                Assert.Equal($"key{i}", kvp.Key);
+                Assert.Equal($"value{i}", kvp.Value);
+            }
         }
     }
 }

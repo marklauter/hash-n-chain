@@ -9,8 +9,9 @@ namespace Dictionaries.IO
         private readonly Stream stream;
         private readonly BinaryWriter writer;
         private readonly BinaryReader reader;
-        private readonly uint bucketCount;
         private readonly int recordSize;
+
+        public uint BucketCount { get; }
 
         public StreamDictionary(Stream stream)
         {
@@ -32,8 +33,8 @@ namespace Dictionaries.IO
             this.recordSize = Marshal.SizeOf<DictionaryRecord>();
 
             this.Count = this.ReadCount();
-            this.bucketCount = this.ReadBucketCount();
-            var minFileSize = this.CalculateBucketOffset(this.bucketCount);
+            this.BucketCount = this.ReadBucketCount();
+            var minFileSize = this.CalculateBucketOffset(this.BucketCount);
             if (stream.Length < minFileSize)
             {
                 throw new ArgumentException($"invalid stream size. expected: {minFileSize}, actual: {stream.Length}", nameof(stream));
@@ -73,7 +74,7 @@ namespace Dictionaries.IO
                 throw new ArgumentException("expected stream to be zero length", nameof(stream));
             }
 
-            this.bucketCount = bucketCount;
+            this.BucketCount = bucketCount;
             this.IsReadOnly = isReadOnly;
             this.writer = new BinaryWriter(stream, Encoding.UTF8, true);
             this.reader = new BinaryReader(stream, Encoding.UTF8, true);

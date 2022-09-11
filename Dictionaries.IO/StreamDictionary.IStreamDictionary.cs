@@ -34,7 +34,7 @@ namespace Dictionaries.IO
                 throw new NotSupportedException("dictionary is readonly");
             }
 
-            var (hash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.bucketCount);
+            var (hash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.BucketCount);
             var bucketOffset = this.CalculateBucketOffset(bucket);
 
             if (this.ReadRecord(bucketOffset) != DictionaryRecord.Empty
@@ -87,6 +87,11 @@ namespace Dictionaries.IO
 
         public void Clear()
         {
+            if (this.IsReadOnly)
+            {
+                throw new NotSupportedException("dictionary is readonly");
+            }
+
             // zero writes the bucket heads
             this.InitializeStream();
         }
@@ -116,16 +121,29 @@ namespace Dictionaries.IO
 
         public void CopyTo(KeyValuePair<string, TValue>[] array, int arrayIndex)
         {
-            throw new NotImplementedException();
-        }
+            if (array is null)
+            {
+                throw new ArgumentNullException(nameof(array));
+            }
 
-        public IEnumerator<KeyValuePair<string, TValue>> GetEnumerator()
-        {
-            throw new NotImplementedException();
+            if (array.Length - arrayIndex < this.Count)
+            {
+                throw new ArgumentException("Array too short.", nameof(array));
+            }
+
+            foreach (var kvp in this.ReadKeyValuePairs())
+            {
+                array[arrayIndex++] = kvp;
+            }
         }
 
         public bool Remove(string key)
         {
+            if (this.IsReadOnly)
+            {
+                throw new NotSupportedException("dictionary is readonly");
+            }
+
             throw new NotImplementedException();
         }
 
@@ -135,6 +153,11 @@ namespace Dictionaries.IO
         }
 
         public bool TryGetValue(string key, [MaybeNullWhen(false)] out TValue value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerator<KeyValuePair<string, TValue>> GetEnumerator()
         {
             throw new NotImplementedException();
         }

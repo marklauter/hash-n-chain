@@ -12,9 +12,34 @@ namespace Dictionaries.IO
             this.writer.Write(Encoding.UTF8.GetBytes(s));
         }
 
+        private IEnumerable<KeyValuePair<string, TValue>> ReadKeyValuePairs()
+        {
+            for (var bucket = 0; bucket < this.BucketCount; ++bucket)
+            {
+                var offset = this.CalculateBucketOffset((uint)bucket);
+                do
+                {
+                    var keyMetaData = this.ReadKeyMetaData(offset);
+                    var dataMetaData = this.ReadDataMetaData(offset);
+                    if (keyMetaData.offset != DictionaryRecord.NullOffset && keyMetaData.length > 0 &&
+                        dataMetaData.offset != DictionaryRecord.NullOffset && dataMetaData.length > 0)
+                    {
+                        var key = this.ReadString(keyMetaData.offset, keyMetaData.length);
+                        var json = this.ReadString(dataMetaData.offset, dataMetaData.length);
+                        var value = JsonConvert.DeserializeObject<TValue>(json);
+                        yield return value is null
+                            ? throw new InvalidDataException(json)
+                            : new KeyValuePair<string, TValue>(key, value);
+                    }
+
+                    offset = this.ReadNextRecordOffsetField(offset);
+                } while (offset != DictionaryRecord.NullOffset);
+            }
+        }
+
         private IEnumerable<TValue> ReadValues()
         {
-            for (var bucket = 0; bucket < this.bucketCount; ++bucket)
+            for (var bucket = 0; bucket < this.BucketCount; ++bucket)
             {
                 var offset = this.CalculateBucketOffset((uint)bucket);
                 do
@@ -58,7 +83,7 @@ namespace Dictionaries.IO
         // returns offset of record matching key or DictionaryRecord.NullOffset if not found
         private long FindKey(string key)
         {
-            var (keyhash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.bucketCount);
+            var (keyhash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.BucketCount);
             var offset = this.CalculateBucketOffset(bucket);
             do
             {
@@ -87,7 +112,7 @@ namespace Dictionaries.IO
 
         private IEnumerable<string> ReadKeys()
         {
-            for (var bucket = 0; bucket < this.bucketCount; ++bucket)
+            for (var bucket = 0; bucket < this.BucketCount; ++bucket)
             {
                 var offset = this.CalculateBucketOffset((uint)bucket);
                 do
@@ -131,7 +156,7 @@ namespace Dictionaries.IO
         private void WriteBucketCount()
         {
             this.stream.Position = BucketCountOffset;
-            this.writer.Write(this.bucketCount);
+            this.writer.Write(this.BucketCount);
         }
 
         private void WriteHeader()
@@ -145,13 +170,13 @@ namespace Dictionaries.IO
             this.Count = 0;
             this.WriteHeader();
             this.AllocateBuckets();
-            this.stream.SetLength(this.bucketCount * this.recordSize + FirstBucketOffset);
+            this.stream.SetLength(this.BucketCount * this.recordSize + FirstBucketOffset);
         }
 
         private void AllocateBuckets()
         {
             this.stream.Position = FirstBucketOffset;
-            this.writer.Write(new byte[this.bucketCount * this.recordSize]);
+            this.writer.Write(new byte[this.BucketCount * this.recordSize]);
         }
 
         private long CalculateBucketOffset(uint bucket)
