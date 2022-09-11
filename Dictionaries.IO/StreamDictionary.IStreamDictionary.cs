@@ -14,12 +14,12 @@ namespace Dictionaries.IO
             set => this.SetValue(key, value);
         }
 
-        // todo: consider not supporting keys & values because the list could be /big/
-        // todo: if not supported then suggest using ReadKeys and ReadValues with a continuation token 
         public ICollection<string> Keys => this.ReadKeys().ToArray();
+
         public ICollection<TValue> Values => this.ReadValues().ToArray();
 
         public int Count { get; private set; }
+
         public bool IsReadOnly { get; }
 
         public void Add(string key, TValue value)
@@ -139,12 +139,11 @@ namespace Dictionaries.IO
 
         public bool Remove(string key)
         {
-            if (this.IsReadOnly)
-            {
-                throw new NotSupportedException("dictionary is readonly");
-            }
-
-            throw new NotImplementedException();
+            return String.IsNullOrEmpty(key)
+                ? throw new ArgumentException($"'{nameof(key)}' cannot be null or empty.", nameof(key))
+                : this.IsReadOnly
+                    ? throw new NotSupportedException("dictionary is readonly")
+                    : this.RemoveInternal(key);
         }
 
         public bool Remove(KeyValuePair<string, TValue> item)
@@ -172,12 +171,12 @@ namespace Dictionaries.IO
 
         public IEnumerator<KeyValuePair<string, TValue>> GetEnumerator()
         {
-            throw new NotImplementedException();
+            return this.ReadKeyValuePairs().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            throw new NotImplementedException();
+            return this.GetEnumerator();
         }
     }
 }

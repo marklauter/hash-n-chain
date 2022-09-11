@@ -13,7 +13,28 @@ namespace Dictionaries.IO.Tests
             var bucketCount = 10;
             using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
-            Assert.Equal(bucketCount * Marshal.SizeOf<DictionaryRecord>() + sizeof(int) * 2, stream.Length);
+            Assert.Equal(bucketCount * Marshal.SizeOf<DictionaryRecord>() + sizeof(int) * 3, stream.Length);
+        }
+
+        [Fact]
+        public void StreamDictionary_Stream_IsReadOnly()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
+
+            var key = "key";
+            var value = "value";
+
+            dictionary.Add(key, value);
+
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var roStream = new MemoryStream(stream.ToArray(), false);
+#pragma warning restore IDISP001 // Dispose created
+            using var roDictionary = new StreamDictionary<string>(roStream);
+            Assert.True(roDictionary.IsReadOnly);
         }
 
         [Fact]
@@ -114,7 +135,6 @@ namespace Dictionaries.IO.Tests
                 Assert.Equal($"value{i * 10}", value);
             }
         }
-
 
         [Fact]
         public void StreamDictionary_TryGetValue()
@@ -391,7 +411,7 @@ namespace Dictionaries.IO.Tests
         }
 
         [Fact]
-        public void StreamDictionary_Stream_With_Data_Sets_Count_N_Buckets()
+        public void StreamDictionary_Stream_With_Data_Sets_Count_Buckets_N_PreHashLength()
         {
 #pragma warning disable IDISP001 // Dispose created - hash stream disposes
             var stream = new MemoryStream();
@@ -414,6 +434,7 @@ namespace Dictionaries.IO.Tests
             using var dictionary2 = new StreamDictionary<string>(stream2);
             Assert.Equal(dictionary.Count, dictionary2.Count);
             Assert.Equal(dictionary.BucketCount, dictionary2.BucketCount);
+            Assert.Equal(dictionary.prehashLength, dictionary2.prehashLength);
         }
 
         [Fact]
@@ -441,6 +462,118 @@ namespace Dictionaries.IO.Tests
                 var kvp = array[i];
                 Assert.Equal($"key{i}", kvp.Key);
                 Assert.Equal($"value{i}", kvp.Value);
+            }
+        }
+
+        [Fact]
+        public void StreamDictionary_Stream_Remove_Returns_False_When_Key_Not_Found()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i}";
+
+                dictionary.Add(key, value);
+            }
+
+            Assert.False(dictionary.Remove("no key"));
+        }
+
+        [Fact]
+        public void StreamDictionary_Stream_Remove_First_Bucket_Item_Returns_True_When_Key_Found()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 3);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i}";
+
+                dictionary.Add(key, value);
+            }
+
+            Assert.True(dictionary.Remove("key0"));
+            Assert.False(dictionary.ContainsKey("key0"));
+            Assert.True(dictionary.ContainsKey("key1"));
+            Assert.True(dictionary.ContainsKey("key2"));
+        }
+
+        [Fact]
+        public void StreamDictionary_Stream_Remove_Second_Bucket_Item_Returns_True_When_Key_Found()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 3);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i}";
+
+                dictionary.Add(key, value);
+            }
+
+            Assert.True(dictionary.Remove("key1"));
+            Assert.True(dictionary.ContainsKey("key0"));
+            Assert.False(dictionary.ContainsKey("key1"));
+            Assert.True(dictionary.ContainsKey("key2"));
+        }
+
+        [Fact]
+        public void StreamDictionary_Stream_Remove_Last_Bucket_Item_Returns_True_When_Key_Found()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 3);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i}";
+
+                dictionary.Add(key, value);
+            }
+
+            Assert.True(dictionary.Remove("key2"));
+            Assert.True(dictionary.ContainsKey("key0"));
+            Assert.True(dictionary.ContainsKey("key1"));
+            Assert.False(dictionary.ContainsKey("key2"));
+        }
+
+        [Fact]
+        public void StreamDictionary_GetEnumerator()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i}";
+
+                dictionary.Add(key, value);
+            }
+
+            foreach (var kvp in dictionary)
+            {
+                Assert.True(dictionary.ContainsKey(kvp.Key));
             }
         }
     }

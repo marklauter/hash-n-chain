@@ -11,8 +11,13 @@
             {
                 if (disposing)
                 {
+                    this.stream.Flush();
                     this.reader.Dispose();
-                    this.writer.Dispose();
+                    if (this.writer is not null)
+                    {
+                        this.writer.Dispose();
+                    }
+
                     this.stream.Dispose();
                 }
 

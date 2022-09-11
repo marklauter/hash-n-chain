@@ -118,6 +118,60 @@ namespace Dictionaries.IO
             }
         }
 
+        private bool RemoveInternal(string key)
+        {
+            var (keyhash, bucket) = StableHash.GetHashBucket(key, this.prehashLength, this.BucketCount);
+            var offset = this.CalculateBucketOffset(bucket);
+            var bucketOffset = offset;
+            var previousOffset = offset;
+            do
+            {
+                var recordhash = this.ReadHashField(offset);
+                if (keyhash == recordhash)
+                {
+                    var keyMetaData = this.ReadKeyMetaData(offset);
+                    var recordKey = this.ReadString(keyMetaData.offset, keyMetaData.length);
+                    if (key.Equals(recordKey, StringComparison.Ordinal))
+                    {
+                        var record = this.ReadRecord(offset);
+                        if (bucketOffset == offset) // record is first in bucket
+                        {
+                            // overwrite first bucket record with next record or empty record
+                            var nextRecord = record.NextRecordOffset == DictionaryRecord.NullOffset
+                                ? DictionaryRecord.Empty
+                                : this.ReadRecord(record.NextRecordOffset);
+
+                            this.WriteRecord(nextRecord, offset);
+                        }
+                        else
+                        {
+                            // if it's any other item then the previous item
+                            // has it's nextoffset adjusted to the matching item nextoffset
+                            var previousRecord = this.ReadRecord(previousOffset);
+                            var newRecord = new DictionaryRecord(
+                                record.NextRecordOffset,
+                                previousRecord.Hash,
+                                previousRecord.KeyOffset,
+                                previousRecord.KeyLength,
+                                previousRecord.DataOffset,
+                                previousRecord.DataLength);
+
+                            this.WriteRecord(newRecord, previousOffset);
+                        }
+
+                        return true;
+                    }
+                }
+
+                previousOffset = offset;
+                offset = this.ReadNextRecordOffsetField(offset);
+
+            } while (offset != DictionaryRecord.NullOffset);
+
+            return false;
+        }
+
+
         // returns offset of record matching key or DictionaryRecord.NullOffset if not found
         private long FindKey(string key)
         {
