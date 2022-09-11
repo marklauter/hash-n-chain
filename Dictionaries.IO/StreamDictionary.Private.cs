@@ -159,6 +159,8 @@ namespace Dictionaries.IO
                             this.WriteRecord(newRecord, previousOffset);
                         }
 
+                        this.Count--;
+
                         return true;
                     }
                 }
@@ -263,7 +265,7 @@ namespace Dictionaries.IO
             this.writer?.Write(this.prehashLength);
         }
 
-        private void WriteHeader()
+        private void InitializeHeader()
         {
             this.WriteCount();
             this.WriteBucketCount();
@@ -272,8 +274,8 @@ namespace Dictionaries.IO
 
         private void InitializeStream()
         {
-            this.Count = 0;
-            this.WriteHeader();
+            this.count = 0;
+            this.InitializeHeader();
             this.AllocateBuckets();
             this.stream.SetLength(this.BucketCount * this.recordSize + FirstBucketOffset);
         }

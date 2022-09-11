@@ -18,7 +18,20 @@ namespace Dictionaries.IO
 
         public ICollection<TValue> Values => this.ReadValues().ToArray();
 
-        public int Count { get; private set; }
+        private int count;
+
+        public int Count
+        {
+            get => this.count;
+            private set
+            {
+                if (this.count != value)
+                {
+                    this.count = value;
+                    this.WriteCount();
+                }
+            }
+        }
 
         public bool IsReadOnly { get; }
 
@@ -77,7 +90,6 @@ namespace Dictionaries.IO
             this.WriteString(data, dataOffset);
 
             this.Count++;
-            this.WriteCount();
         }
 
         public void Add(KeyValuePair<string, TValue> item)

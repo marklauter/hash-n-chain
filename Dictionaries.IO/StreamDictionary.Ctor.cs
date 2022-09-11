@@ -37,7 +37,7 @@ namespace Dictionaries.IO
             this.reader = new BinaryReader(stream, Encoding.UTF8, true);
             this.recordSize = Marshal.SizeOf<DictionaryRecord>();
 
-            this.Count = this.ReadCount();
+            this.count = this.ReadCount();
             this.BucketCount = this.ReadBucketCount();
             this.prehashLength = this.ReadPrehashLength();
             var minFileSize = this.CalculateBucketOffset(this.BucketCount);
