@@ -12,7 +12,7 @@ namespace Dictionaries.IO
         private readonly int recordSize;
         private readonly int prehashLength;
 
-        public uint BucketCount { get; }
+        public int BucketCount { get; }
 
         public StreamDictionary(Stream stream)
         {
@@ -34,9 +34,9 @@ namespace Dictionaries.IO
             this.recordSize = Marshal.SizeOf<DictionaryRecord>();
 
             this.Count = this.ReadCount();
-            this.BucketCount = this.ReadBucketCount();
+            this.BucketCount = (int)this.ReadBucketCount();
             this.prehashLength = this.ReadPrehashLength();
-            var minFileSize = this.CalculateBucketOffset(this.BucketCount);
+            var minFileSize = this.CalculateBucketOffset((uint)this.BucketCount);
             if (stream.Length < minFileSize)
             {
                 throw new ArgumentException($"invalid stream size. expected: {minFileSize}, actual: {stream.Length}", nameof(stream));
@@ -45,7 +45,7 @@ namespace Dictionaries.IO
 
         public StreamDictionary(
             Stream stream,
-            uint bucketCount)
+            int bucketCount)
             : this(stream, bucketCount, -1, false)
         {
         }
@@ -53,7 +53,7 @@ namespace Dictionaries.IO
 
         public StreamDictionary(
             Stream stream,
-            uint bucketCount,
+            int bucketCount,
             int prehashLength)
             : this(stream, bucketCount, prehashLength, false)
         {
@@ -61,7 +61,7 @@ namespace Dictionaries.IO
 
         public StreamDictionary(
             Stream stream,
-            uint bucketCount,
+            int bucketCount,
             int prehashLength,
             bool isReadOnly)
         {

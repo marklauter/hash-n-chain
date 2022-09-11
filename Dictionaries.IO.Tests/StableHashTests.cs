@@ -17,11 +17,11 @@ namespace Dictionaries.IO.Tests
         {
             var value = "hello";
 
-            var hash = StableHash.Prehash(value, (uint)value.Length + 1);
+            var hash = StableHash.Prehash(value, value.Length + 1);
 
             Assert.Equal(261238937u, hash);
 
-            hash = StableHash.Prehash(value, (uint)value.Length + 10);
+            hash = StableHash.Prehash(value, value.Length + 10);
 
             Assert.Equal(261238937u, hash);
         }
@@ -55,15 +55,15 @@ namespace Dictionaries.IO.Tests
         {
             var value1 = "hello";
             var value2 = "jimmy";
-            var buckets = 10u;
+            var buckets = 10;
 
             (_, var bucket) = StableHash.GetHashBucket(value1, 3, buckets);
             Assert.True(bucket <= buckets && bucket >= 0);
-            Assert.Equal(4u, bucket);
+            Assert.Equal(4, bucket);
 
             (_, bucket) = StableHash.GetHashBucket(value2, 3, buckets);
             Assert.True(bucket <= buckets && bucket >= 0);
-            Assert.Equal(5u, bucket);
+            Assert.Equal(5, bucket);
         }
     }
 }

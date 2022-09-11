@@ -16,7 +16,7 @@ namespace Dictionaries.IO
         {
             for (var bucket = 0; bucket < this.BucketCount; ++bucket)
             {
-                var offset = this.CalculateBucketOffset((uint)bucket);
+                var offset = this.CalculateBucketOffset((int)(uint)bucket);
                 do
                 {
                     var keyMetaData = this.ReadKeyMetaData(offset);
@@ -41,7 +41,7 @@ namespace Dictionaries.IO
         {
             for (var bucket = 0; bucket < this.BucketCount; ++bucket)
             {
-                var offset = this.CalculateBucketOffset((uint)bucket);
+                var offset = this.CalculateBucketOffset((int)(uint)bucket);
                 do
                 {
                     var metaData = this.ReadDataMetaData(offset);
@@ -126,7 +126,7 @@ namespace Dictionaries.IO
                 throw new ArgumentNullException(nameof(key));
             }
 
-            var (keyhash, bucket) = StableHash.GetHashBucket(key, (uint)this.prehashLength, this.BucketCount);
+            var (keyhash, bucket) = StableHash.GetHashBucket(key, this.prehashLength, this.BucketCount);
             var offset = this.CalculateBucketOffset(bucket);
             do
             {
@@ -148,16 +148,11 @@ namespace Dictionaries.IO
             return DictionaryRecord.NullOffset;
         }
 
-        private string ReadKey(DictionaryRecord record)
-        {
-            return this.ReadString(record.KeyOffset, record.KeyLength);
-        }
-
         private IEnumerable<string> ReadKeys()
         {
             for (var bucket = 0; bucket < this.BucketCount; ++bucket)
             {
-                var offset = this.CalculateBucketOffset((uint)bucket);
+                var offset = this.CalculateBucketOffset((int)(uint)bucket);
                 do
                 {
                     var metaData = this.ReadKeyMetaData(offset);
@@ -184,10 +179,10 @@ namespace Dictionaries.IO
             return this.reader.ReadInt32();
         }
 
-        private uint ReadBucketCount()
+        private int ReadBucketCount()
         {
             this.stream.Position = BucketCountOffset;
-            return this.reader.ReadUInt32();
+            return this.reader.ReadInt32();
         }
 
         private int ReadPrehashLength()
@@ -235,7 +230,7 @@ namespace Dictionaries.IO
             this.writer.Write(new byte[this.BucketCount * this.recordSize]);
         }
 
-        private long CalculateBucketOffset(uint bucket)
+        private long CalculateBucketOffset(int bucket)
         {
             return bucket * this.recordSize + FirstBucketOffset;
         }
@@ -255,7 +250,7 @@ namespace Dictionaries.IO
             return Unsafe.As<byte, DictionaryRecord>(ref buffer[0]);
         }
 
-        private (long offset, DictionaryRecord record) GetLastRecordInBucket(uint bucket)
+        private (long offset, DictionaryRecord record) GetLastRecordInBucket(int bucket)
         {
             var offset = this.CalculateBucketOffset(bucket);
             var nextRecordOffset = this.ReadNextRecordOffsetField(offset);

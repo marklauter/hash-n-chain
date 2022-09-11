@@ -1,19 +1,19 @@
 ﻿namespace Dictionaries.IO
 {
     // http://www.partow.net/programming/hashfunctions/index.html#GeneralHashFunctionLicense
-    public static class StableHash
+    internal static class StableHash
     {
-        public static (uint hash, uint bucket) GetHashBucket(byte[] value, int length, uint bucketCount)
+        public static (uint hash, int bucket) GetHashBucket(byte[] value, int length, int bucketCount)
         {
             var hash = Prehash(value, length);
-            var bucket = hash % bucketCount;
+            var bucket = (int)(hash % bucketCount);
             return (hash, bucket);
         }
 
-        public static (uint hash, uint bucket) GetHashBucket(string value, int length, uint bucketCount)
+        public static (uint hash, int bucket) GetHashBucket(string value, int length, int bucketCount)
         {
             var hash = Prehash(value, length);
-            var bucket = hash % bucketCount;
+            var bucket = (int)(hash % bucketCount);
             return (hash, bucket);
         }
 
