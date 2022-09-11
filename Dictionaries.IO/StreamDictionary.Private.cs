@@ -9,7 +9,7 @@ namespace Dictionaries.IO
         private void WriteString(string s, long offset)
         {
             this.stream.Position = offset;
-            this.writer.Write(Encoding.UTF8.GetBytes(s));
+            this.writer?.Write(Encoding.UTF8.GetBytes(s));
         }
 
         private IEnumerable<KeyValuePair<string, TValue>> ReadKeyValuePairs()
@@ -194,19 +194,19 @@ namespace Dictionaries.IO
         private void WriteCount()
         {
             this.stream.Position = CountOffset;
-            this.writer.Write(this.Count);
+            this.writer?.Write(this.Count);
         }
 
         private void WriteBucketCount()
         {
             this.stream.Position = BucketCountOffset;
-            this.writer.Write(this.BucketCount);
+            this.writer?.Write(this.BucketCount);
         }
 
         private void WritePrehashLength()
         {
             this.stream.Position = PrehashLengthOffset;
-            this.writer.Write(this.prehashLength);
+            this.writer?.Write(this.prehashLength);
         }
 
         private void WriteHeader()
@@ -227,7 +227,7 @@ namespace Dictionaries.IO
         private void AllocateBuckets()
         {
             this.stream.Position = FirstBucketOffset;
-            this.writer.Write(new byte[this.BucketCount * this.recordSize]);
+            this.writer?.Write(new byte[this.BucketCount * this.recordSize]);
         }
 
         private long CalculateBucketOffset(int bucket)
@@ -240,7 +240,7 @@ namespace Dictionaries.IO
             var buffer = new byte[this.recordSize];
             Unsafe.As<byte, DictionaryRecord>(ref buffer[0]) = record;
             this.stream.Position = offset;
-            this.writer.Write(buffer);
+            this.writer?.Write(buffer);
         }
 
         private DictionaryRecord ReadRecord(long offset)

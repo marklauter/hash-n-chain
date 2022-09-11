@@ -7,10 +7,10 @@ namespace Dictionaries.IO
     public partial class StreamDictionary<TValue>
     {
         private readonly Stream stream;
-        private readonly BinaryWriter writer;
+        private readonly BinaryWriter? writer;
         private readonly BinaryReader reader;
         private readonly int recordSize;
-        private readonly int prehashLength;
+        internal readonly int prehashLength;
 
         public int BucketCount { get; }
 
@@ -29,7 +29,11 @@ namespace Dictionaries.IO
 
             this.IsReadOnly = !stream.CanWrite;
 
-            this.writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            if (!this.IsReadOnly)
+            {
+                this.writer = new BinaryWriter(stream, Encoding.UTF8, true);
+            }
+
             this.reader = new BinaryReader(stream, Encoding.UTF8, true);
             this.recordSize = Marshal.SizeOf<DictionaryRecord>();
 
