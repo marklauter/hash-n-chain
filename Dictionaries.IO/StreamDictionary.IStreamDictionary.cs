@@ -34,7 +34,7 @@ namespace Dictionaries.IO
                 throw new NotSupportedException("dictionary is readonly");
             }
 
-            var (hash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.BucketCount);
+            var (hash, bucket) = StableHash.GetHashBucket(key, (uint)this.prehashLength, this.BucketCount);
             var bucketOffset = this.CalculateBucketOffset(bucket);
 
             if (this.ReadRecord(bucketOffset) != DictionaryRecord.Empty

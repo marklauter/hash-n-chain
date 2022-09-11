@@ -10,6 +10,7 @@ namespace Dictionaries.IO
         private readonly BinaryWriter writer;
         private readonly BinaryReader reader;
         private readonly int recordSize;
+        private readonly int prehashLength;
 
         public uint BucketCount { get; }
 
@@ -34,6 +35,7 @@ namespace Dictionaries.IO
 
             this.Count = this.ReadCount();
             this.BucketCount = this.ReadBucketCount();
+            this.prehashLength = this.ReadPrehashLength();
             var minFileSize = this.CalculateBucketOffset(this.BucketCount);
             if (stream.Length < minFileSize)
             {
@@ -44,13 +46,23 @@ namespace Dictionaries.IO
         public StreamDictionary(
             Stream stream,
             uint bucketCount)
-            : this(stream, bucketCount, false)
+            : this(stream, bucketCount, -1, false)
+        {
+        }
+
+
+        public StreamDictionary(
+            Stream stream,
+            uint bucketCount,
+            int prehashLength)
+            : this(stream, bucketCount, prehashLength, false)
         {
         }
 
         public StreamDictionary(
             Stream stream,
             uint bucketCount,
+            int prehashLength,
             bool isReadOnly)
         {
             this.stream = stream ?? throw new ArgumentNullException(nameof(stream));
@@ -75,6 +87,7 @@ namespace Dictionaries.IO
             }
 
             this.BucketCount = bucketCount;
+            this.prehashLength = prehashLength;
             this.IsReadOnly = isReadOnly;
             this.writer = new BinaryWriter(stream, Encoding.UTF8, true);
             this.reader = new BinaryReader(stream, Encoding.UTF8, true);

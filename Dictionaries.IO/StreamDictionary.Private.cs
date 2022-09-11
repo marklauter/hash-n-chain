@@ -87,6 +87,11 @@ namespace Dictionaries.IO
                 throw new ArgumentNullException(nameof(key));
             }
 
+            if (this.IsReadOnly)
+            {
+                throw new NotSupportedException("dictionary is readonly");
+            }
+
             var offset = this.FindKey(key);
             if (offset == DictionaryRecord.NullOffset)
             {
@@ -121,7 +126,7 @@ namespace Dictionaries.IO
                 throw new ArgumentNullException(nameof(key));
             }
 
-            var (keyhash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.BucketCount);
+            var (keyhash, bucket) = StableHash.GetHashBucket(key, (uint)this.prehashLength, this.BucketCount);
             var offset = this.CalculateBucketOffset(bucket);
             do
             {
@@ -185,6 +190,12 @@ namespace Dictionaries.IO
             return this.reader.ReadUInt32();
         }
 
+        private int ReadPrehashLength()
+        {
+            this.stream.Position = PrehashLengthOffset;
+            return this.reader.ReadInt32();
+        }
+
         private void WriteCount()
         {
             this.stream.Position = CountOffset;
@@ -197,10 +208,17 @@ namespace Dictionaries.IO
             this.writer.Write(this.BucketCount);
         }
 
+        private void WritePrehashLength()
+        {
+            this.stream.Position = PrehashLengthOffset;
+            this.writer.Write(this.prehashLength);
+        }
+
         private void WriteHeader()
         {
             this.WriteCount();
             this.WriteBucketCount();
+            this.WritePrehashLength();
         }
 
         private void InitializeStream()

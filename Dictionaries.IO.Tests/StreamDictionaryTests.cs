@@ -11,7 +11,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             Assert.Equal(bucketCount * Marshal.SizeOf<DictionaryRecord>() + sizeof(int) * 2, stream.Length);
         }
@@ -23,7 +23,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             var key = "key";
             var value = "value";
@@ -42,7 +42,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             var key = "key";
             var value = "value";
@@ -60,7 +60,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             for (var i = 0; i < 3; i++)
             {
@@ -84,7 +84,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             for (var i = 0; i < 3; i++)
             {
@@ -123,7 +123,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             for (var i = 0; i < 3; i++)
             {
@@ -152,7 +152,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -180,7 +180,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -212,7 +212,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -241,7 +241,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -268,7 +268,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -300,7 +300,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -340,7 +340,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             var key1 = "key1";
             var value1 = "value1";
@@ -372,7 +372,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             for (var i = 0; i < 3; i++)
             {
@@ -397,7 +397,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             for (var i = 0; i < 3; i++)
             {
@@ -423,7 +423,7 @@ namespace Dictionaries.IO.Tests
             var stream = new MemoryStream();
 #pragma warning restore IDISP001 // Dispose created
             var bucketCount = 10u;
-            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount, 4);
 
             for (var i = 0; i < 3; i++)
             {
