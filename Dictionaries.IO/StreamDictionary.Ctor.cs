@@ -34,9 +34,9 @@ namespace Dictionaries.IO
             this.recordSize = Marshal.SizeOf<DictionaryRecord>();
 
             this.Count = this.ReadCount();
-            this.BucketCount = (int)this.ReadBucketCount();
+            this.BucketCount = this.ReadBucketCount();
             this.prehashLength = this.ReadPrehashLength();
-            var minFileSize = this.CalculateBucketOffset((uint)this.BucketCount);
+            var minFileSize = this.CalculateBucketOffset(this.BucketCount);
             if (stream.Length < minFileSize)
             {
                 throw new ArgumentException($"invalid stream size. expected: {minFileSize}, actual: {stream.Length}", nameof(stream));
