@@ -62,27 +62,19 @@ namespace Dictionaries.IO.Tests
             var bucketCount = 10u;
             using var dictionary = new StreamDictionary<string>(stream, bucketCount);
 
-            var key1 = "key1";
-            var value1 = "value1";
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i}";
 
-            var key2 = "key2";
-            var value2 = "value2";
+                dictionary.Add(key, value);
+            }
 
-            var key3 = "key3";
-            var value3 = "value3";
-
-            dictionary.Add(key1, value1);
-            dictionary.Add(key2, value2);
-            dictionary.Add(key3, value3);
-
-            var returnedValue = dictionary[key1];
-            Assert.Equal(value1, returnedValue);
-
-            returnedValue = dictionary[key2];
-            Assert.Equal(value2, returnedValue);
-
-            returnedValue = dictionary[key3];
-            Assert.Equal(value3, returnedValue);
+            for (var i = 0; i < 3; i++)
+            {
+                var value = dictionary[$"key{i}"];
+                Assert.Equal($"value{i}", value);
+            }
         }
 
         [Fact]
