@@ -80,9 +80,47 @@ namespace Dictionaries.IO
                 : this.ReadRecord(offset);
         }
 
+        private void SetValue(string key, TValue value)
+        {
+            if (key is null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
+            var offset = this.FindKey(key);
+            if (offset == DictionaryRecord.NullOffset)
+            {
+                this.Add(key, value);
+            }
+            else
+            {
+                var json = JsonConvert.SerializeObject(value);
+                var dataOffset = this.stream.Length;
+                var dataLength = json.Length;
+
+                var currentRecord = this.ReadRecord(offset);
+
+                var newRecord = new DictionaryRecord(
+                    currentRecord.NextRecordOffset,
+                    currentRecord.Hash,
+                    currentRecord.KeyOffset,
+                    currentRecord.KeyLength,
+                    dataOffset,
+                    dataLength);
+
+                this.WriteString(json, dataOffset);
+                this.WriteRecord(newRecord, offset);
+            }
+        }
+
         // returns offset of record matching key or DictionaryRecord.NullOffset if not found
         private long FindKey(string key)
         {
+            if (key is null)
+            {
+                throw new ArgumentNullException(nameof(key));
+            }
+
             var (keyhash, bucket) = StableHash.GetHashBucket(key, PrehashLength, this.BucketCount);
             var offset = this.CalculateBucketOffset(bucket);
             do

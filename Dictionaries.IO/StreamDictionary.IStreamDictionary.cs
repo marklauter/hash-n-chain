@@ -11,7 +11,7 @@ namespace Dictionaries.IO
         public TValue this[string key]
         {
             get => this.ReadValue(key);
-            set => throw new NotImplementedException();
+            set => this.SetValue(key, value);
         }
 
         // todo: consider not supporting keys & values because the list could be /big/

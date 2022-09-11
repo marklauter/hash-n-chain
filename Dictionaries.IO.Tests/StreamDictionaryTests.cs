@@ -54,7 +54,7 @@ namespace Dictionaries.IO.Tests
         }
 
         [Fact]
-        public void StreamDictionary_Index()
+        public void StreamDictionary_Get_Indexer()
         {
 #pragma warning disable IDISP001 // Dispose created - hash stream disposes
             var stream = new MemoryStream();
@@ -76,6 +76,45 @@ namespace Dictionaries.IO.Tests
                 Assert.Equal($"value{i}", value);
             }
         }
+
+        [Fact]
+        public void StreamDictionary_Set_Indexer()
+        {
+#pragma warning disable IDISP001 // Dispose created - hash stream disposes
+            var stream = new MemoryStream();
+#pragma warning restore IDISP001 // Dispose created
+            var bucketCount = 10u;
+            using var dictionary = new StreamDictionary<string>(stream, bucketCount);
+
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i}";
+
+                dictionary[key] = value;
+            }
+
+            for (var i = 0; i < 3; i++)
+            {
+                var value = dictionary[$"key{i}"];
+                Assert.Equal($"value{i}", value);
+            }
+
+            for (var i = 0; i < 3; i++)
+            {
+                var key = $"key{i}";
+                var value = $"value{i * 10}";
+
+                dictionary[key] = value;
+            }
+
+            for (var i = 0; i < 3; i++)
+            {
+                var value = dictionary[$"key{i}"];
+                Assert.Equal($"value{i * 10}", value);
+            }
+        }
+
 
         [Fact]
         public void StreamDictionary_TryGetValue()
