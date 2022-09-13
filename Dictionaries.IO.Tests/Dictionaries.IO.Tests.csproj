@@ -4,9 +4,11 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 
 		<IsPackable>false</IsPackable>
+
+		<AnalysisLevel>latest-all</AnalysisLevel>
 	</PropertyGroup>
 
 	<ItemGroup>
